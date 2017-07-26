@@ -1,0 +1,61 @@
+EXPERIMENT_DATA             EXP_NAME.fmca
+ADD_BACKGROUND              yes
+PLOT_OUTPUT                 no
+SAVE_STATS		    no
+STATS_DATA_NAME		    stats_TigressGroup.dat
+
+SIMULATED_DATA
+SIM_NAME.fmca
+
+SPECTRUM  START_CHANNEL END_CHANNEL STEP_C STEP_W
+1	  3380	        3780	    3608.0 80.0
+2	  3400	        3800	    3572.0 60.0
+3	  3320	        3720	    3530.0 40.0
+4	  3260	        3660	    3484.0 60.0
+5	  3220	        3620	    3452.0 80.0
+
+<---END_OF_PARAMETERS--->
+
+SPECTRUM  START_CHANNEL END_CHANNEL STEP_C STEP_W
+1	  3380	        3780	    3608.0 80.0
+2	  3400	        3800	    3572.0 60.0
+3	  3320	        3720	    3530.0 40.0
+4	  3260	        3660	    3484.0 60.0
+5	  3220	        3620	    3452.0 80.0
+
+SPECTRUM  START_CHANNEL END_CHANNEL STEP_C STEP_W
+1	  845		945	    902.0  20.0	    
+2	  850		950	    893.0  15.0
+3	  830		930	    882.5  10.0
+4	  815		915	    871.0  15.0
+5	  805		905	    863.0  20.0
+
+
+This is a parameter file for the peak comparison code.  The code will analyze and compare data in the two specified .mca files, in the specified range of spectra and channels.  If you change the format of the file, prepare for unforeseen consequences.
+
+Parameters and their descriptions follow:
+
+EXPERIMENT_DATA
+Contains the path to the .mca file containing experiment data.
+
+ADD_BACKGROUND
+no: Don't add any background.
+yes: Add a constant+step function (with centroid STEP_C and width sqrt(2)*STEP_W) background to the simulated data.
+
+PLOT_OUTPUT
+no: Show chisq stats only.
+yes: Show a plot of the simulated and experimental data alongside chisq stats.
+detailed: Same as 'yes', except plot all simulated datasets and background as well.
+
+SAVE_STATS
+no: do not save stats.
+yes: save chi-square and Bhattacharyya statistical analysis to a file.
+
+STATS_DATA_NAME
+Path to .dat file containing the stats information. Column 1 is spectrum #, column 2 is chi-square, column 3 is Bhattacharyya.
+
+SIMULATED_DATA
+Contains the path(s) to the .mca file(s) containing simulated data.  Multiple datasets may be specified, each on a separate line.
+
+SPECTRUM  START_CHANNEL END_CHANNEL
+Contains a list of the spectra to analyze in the experiment and simulated data, along with the channel range to analyze.  Multiple spectra may be specified, each on a separate line.
