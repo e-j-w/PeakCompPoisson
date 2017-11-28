@@ -34,6 +34,9 @@ double chisq;
 double scaledSimHist[NSPECT][S32K];
 float  resultsHist[NSPECT][S32K];
 
+//global flags
+int verbosity; //0=only print chisq, 1=print parameters, 2=print debug info
+
 // new ROOT stuff
 TApplication *theApp;
 TH1D *data[NSPECT],*sim[NSPECT];

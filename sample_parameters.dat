@@ -1,18 +1,19 @@
-EXPERIMENT_DATA             EXP_NAME.fmca
+EXPERIMENT_DATA             expt/sum_2548and3088gate.mca
 ADD_BACKGROUND              yes
 PLOT_OUTPUT                 no
-SAVE_STATS		    no
-STATS_DATA_NAME		    stats_TigressGroup.dat
+VERBOSE                     no
+SAVE_STATS		    					no
+STATS_DATA_NAME		    			stats_TigressGroup.dat
 
-SIMULATED_DATA
-SIM_NAME.fmca
+SIMULATED_DATA              mca/18_4.1_15.mca
 
 SPECTRUM  START_CHANNEL END_CHANNEL STEP_C STEP_W
-1	  3380	        3780	    3608.0 80.0
-2	  3400	        3800	    3572.0 60.0
-3	  3320	        3720	    3530.0 40.0
-4	  3260	        3660	    3484.0 60.0
-5	  3220	        3620	    3452.0 80.0
+1	  2880	        3173	    3026.0 80.0
+2	  2845	        3145	    2995.0 60.0
+3	  2732	        3158	    2945.0 40.0
+4	  2707	        3165	    2936.0 60.0
+5	  2682	        3158	    2920.0 80.0
+6	  2665	        3116	    2890.0 80.0
 
 <---END_OF_PARAMETERS--->
 
@@ -46,6 +47,11 @@ PLOT_OUTPUT
 no: Show chisq stats only.
 yes: Show a plot of the simulated and experimental data alongside chisq stats.
 detailed: Same as 'yes', except plot all simulated datasets and background as well.
+
+VERBOSE
+no: only print the fit chisq value (useful for interfacing with bash scripts)
+yes: print the results of reading in the parameter file and fitting
+debug: print the above plus debug info
 
 SAVE_STATS
 no: do not save stats.
