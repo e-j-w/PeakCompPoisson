@@ -17,20 +17,6 @@ SPECTRUM  START_CHANNEL END_CHANNEL STEP_C STEP_W
 
 <---END_OF_PARAMETERS--->
 
-SPECTRUM  START_CHANNEL END_CHANNEL STEP_C STEP_W
-1	  3380	        3780	    3608.0 80.0
-2	  3400	        3800	    3572.0 60.0
-3	  3320	        3720	    3530.0 40.0
-4	  3260	        3660	    3484.0 60.0
-5	  3220	        3620	    3452.0 80.0
-
-SPECTRUM  START_CHANNEL END_CHANNEL STEP_C STEP_W
-1	  845		945	    902.0  20.0	    
-2	  850		950	    893.0  15.0
-3	  830		930	    882.5  10.0
-4	  815		915	    871.0  15.0
-5	  805		905	    863.0  20.0
-
 
 This is a parameter file for the peak comparison code.  The code will analyze and compare data in the two specified .mca files, in the specified range of spectra and channels.  If you change the format of the file, prepare for unforeseen consequences.
 
@@ -41,7 +27,9 @@ Contains the path to the .mca file containing experiment data.
 
 ADD_BACKGROUND
 no: Don't add any background.
-yes: Add a constant+step function (with centroid STEP_C and width sqrt(2)*STEP_W) background to the simulated data.
+step: Add a constant+step function (with centroid STEP_C and width sqrt(2)*STEP_W) background to the simulated data.
+lin: Add a linear background to the simulated data.
+const: Add a constant background to the simulated data.
 
 PLOT_OUTPUT
 no: Show chisq stats only.

@@ -44,8 +44,12 @@ void readConfigFile(const char *fileName) {
           numSimData++;
         }  
         if (strcmp(str1, "ADD_BACKGROUND") == 0) {
-          if (strcmp(str2, "yes") == 0)
-            addBackground = 1;
+          if (strcmp(str2, "step") == 0)
+            addBackground = 1; //const + step function
+          else if (strcmp(str2, "lin") == 0)
+            addBackground = 2; //linear
+          else if (strcmp(str2, "const") == 0)
+            addBackground = 3; //constant
           else
             addBackground = 0;
         }
@@ -120,6 +124,8 @@ void readConfigFile(const char *fileName) {
     if (addBackground == 0)
       printf("Will not add background to simulated data.\n");
     if (addBackground == 1)
+      printf("Will add a constant background + step function to simulated data.\n");
+    if (addBackground == 2)
       printf("Will add a linear background to simulated data.\n");
     if (plotOutput == 0)
       printf("Will not plot output data.\n");

@@ -115,31 +115,40 @@ int main(int argc, char *argv[]) {
   if(verbosity>0)
     printf("Spectra read in...\n");
 
-  if (addBackground == 0) // no background not allowed
-  {
-    printf("ERROR: no background specified for fit\n");
-    exit(-1);
-  } else if (addBackground == 1) // linear background addition
-  {
-    find_chisqMin();
+  
+  find_chisqMin();
 
-    // scale simulated data
-    for (i = 0; i < numSpectra; i++)
-      for (j = 0; j < S32K; j++)
-        scaledSimHist[spectrum[i]][j] = aFinal[0][i] * simHist[spectrum[i]][j];
+  // scale simulated data
+  for (i = 0; i < numSpectra; i++)
+    for (j = 0; j < S32K; j++)
+      scaledSimHist[spectrum[i]][j] = aFinal[0][i] * simHist[spectrum[i]][j];
 
-    // add background to simulated data
-    for (i = 0; i < numSpectra; i++)
-      for (j = 0; j < S32K; j++)
+  // add background to simulated data
+  for (i = 0; i < numSpectra; i++)
+    for (j = 0; j < S32K; j++){
+      if (addBackground == 1){
         scaledSimHist[spectrum[i]][j] =
-            scaledSimHist[spectrum[i]][j] + aFinal[1][i] +
-            aFinal[2][i] * erfc(((double)j - sfc[i]) / sfw[i]);
+          scaledSimHist[spectrum[i]][j] + aFinal[1][i] +
+          aFinal[2][i] * erfc(((double)j - sfc[i]) / sfw[i]);
+      }else if (addBackground == 2){
+        scaledSimHist[spectrum[i]][j] =
+          scaledSimHist[spectrum[i]][j] + aFinal[1][i] +
+          aFinal[2][i] * (double)j;
+      }else if (addBackground == 3){
+        scaledSimHist[spectrum[i]][j] =
+          scaledSimHist[spectrum[i]][j] + aFinal[1][i];
+      }else{
+        scaledSimHist[spectrum[i]][j] =
+          scaledSimHist[spectrum[i]][j];
+      }
+      
+    }
+      
 
-    // fit result histogram
-    for (i = 0; i < numSpectra; i++)
-      for (j = 0; j < S32K; j++)
-        resultsHist[spectrum[i]][j] = (float)scaledSimHist[spectrum[i]][j];
-  }
+  // fit result histogram
+  for (i = 0; i < numSpectra; i++)
+    for (j = 0; j < S32K; j++)
+      resultsHist[spectrum[i]][j] = (float)scaledSimHist[spectrum[i]][j];
 
   // print output
   if(verbosity>0)
@@ -193,8 +202,15 @@ double lrchisq(const double *par) {
     ni = expCurrent[i]; // events in ith bin
 
     // calculate model in the ith bin
-    yi = par[0] * simCurrent[i] + par[1] +
-         par[2] * erfc(((double)i - sfc[spCurrent]) / sfw[spCurrent]);
+    if (addBackground == 1){
+      yi = par[0] * simCurrent[i] + par[1] + par[2] * erfc(((double)i - sfc[spCurrent]) / sfw[spCurrent]);
+    }else if (addBackground == 2){
+      yi = par[0] * simCurrent[i] + par[1] + par[2] * (double)i;
+    }else if (addBackground == 3){
+      yi = par[0] * simCurrent[i] + par[1];
+    }else{
+      yi = par[0] * simCurrent[i];
+    }
 
     // evaluate chisq given input parameters
     if (ni > 0.)
@@ -223,8 +239,16 @@ double pchisq(const double *par) {
       ni = 0.;
 
     // calculate model in the ith bin
-    yi = par[0] * simCurrent[i] + par[1] +
-         par[2] * erfc(((double)i - sfc[spCurrent]) / sfw[spCurrent]);
+    if (addBackground == 1){
+      yi = par[0] * simCurrent[i] + par[1] + par[2] * erfc(((double)i - sfc[spCurrent]) / sfw[spCurrent]);
+    }else if (addBackground == 2){
+      yi = par[0] * simCurrent[i] + par[1] + par[2] * (double)i;
+    }else if (addBackground == 3){
+      yi = par[0] * simCurrent[i] + par[1];
+    }else{
+      yi = par[0] * simCurrent[i];
+    }
+    
 
     // evaluate chisq given input parameters
     pchisq += (ni - yi) * (ni - yi) / yi;
@@ -244,8 +268,15 @@ double nchisq(const double *par) {
     ni = expCurrent[i]; // events in ith bin
 
     // calculate model in the ith bin
-    yi = par[0] * simCurrent[i] + par[1] +
-         par[2] * erfc(((double)i - sfc[spCurrent]) / sfw[spCurrent]);
+    if (addBackground == 1){
+      yi = par[0] * simCurrent[i] + par[1] + par[2] * erfc(((double)i - sfc[spCurrent]) / sfw[spCurrent]);
+    }else if (addBackground == 2){
+      yi = par[0] * simCurrent[i] + par[1] + par[2] * (double)i;
+    }else if (addBackground == 3){
+      yi = par[0] * simCurrent[i] + par[1];
+    }else{
+      yi = par[0] * simCurrent[i];
+    }
 
     // evaluate chisq given input parameters
     if (ni > 0.) // have to drop all bins where ni = 0

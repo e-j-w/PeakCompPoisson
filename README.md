@@ -10,7 +10,7 @@ Uses Poisson maximum likelihood ratio chi-square for the comparison of experimen
 
 Useful References: A. Chester et al. Phys. Rev. C. 96 (2017) 011302.; S. Baker and R. D. Cousins. Nucl. Inst. and Meth. 221 (1984) 437-442.; G. Cowan. Statistical Data Analysis. Clarendon Press, 1998.; F. James. Minuit Function Minimization and Error Analysis Reference Manual. CERN 3 1994. Version 94.1. CERN Program Library entry D506.
 
-### Installation
+## Installation
 
 Requires ROOT (tested with v5.x) to be installed with environment variables set up properly.  Environment variable setup can be done by adding to your `.bashrc` (and then reloading the terminal):
 
