@@ -288,6 +288,7 @@ double nchisq(const double *par) {
 void find_chisqMin() {
   int i = 0;
   int j = 0;
+  double intExp,intSim;
 
   if(verbosity>0)
     printf("Fitting data...\n");
@@ -313,8 +314,17 @@ void find_chisqMin() {
     for (j = 0; j < S32K; j++) {
       expCurrent[j] = (double)expHist[spectrum[i]][j];
       simCurrent[j] = (double)simHist[spectrum[i]][j];
+      
     }
     spCurrent = i;
+
+    //calculate integrals
+    intSim=0.;
+    intExp=0.;
+    for (j = startCh[spCurrent]; j <= endCh[spCurrent]; j++){
+      intSim += (double)simHist[spectrum[i]][j];
+      intExp += (double)expHist[spectrum[i]][j]; 
+    }
 
     /*//print simulated values fed into minimizer
     double expSum=0.,simSum=0.;
@@ -335,6 +345,9 @@ void find_chisqMin() {
     // step size and starting variables
     // may need to change for best performance
     // under different running conditions
+    double ratio = intExp/intSim;
+    double variable[3] = {ratio,ratio,ratio};
+    double step[3] = {ratio/10., ratio/10., ratio/10.};
 
     // 94Sr (low stats)
     // double step[3] = {0.00001,0.0001,0.0001};
@@ -344,9 +357,7 @@ void find_chisqMin() {
     // double step[3] = {0.001,0.001,0.001};
     // double variable[3] = {0.01,0.01,0.01};
 
-    // 84Kr (high stats)
-    double step[3] = {0.001, 0.001, 0.001};
-    double variable[3] = {0.01, 0.01, 0.01};
+    
 
     min->SetFunction(lr);
 
