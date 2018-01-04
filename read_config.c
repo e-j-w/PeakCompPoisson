@@ -7,7 +7,7 @@ int plotOutput;    // 0=no, 1=yes, 2=detailed
 int saveStats;     // 0=no, 1=yes
 int saveBG;        // 0=no, 1=yes
 int saveResults;   // 0=no, 1=yes
-char expDataName[256], simDataName[256], statsDataName[256],
+char expDataName[256], simDataName[NSIMDATA][256], statsDataName[256],
     resultsDataName[256], bgDataName[256]; // file names
 char str[256], str1[256], str2[256];
 
@@ -40,8 +40,11 @@ void readConfigFile(const char *fileName) {
         if (strcmp(str1, "EXPERIMENT_DATA") == 0)
           strcpy(expDataName, str2);
         if (strcmp(str1, "SIMULATED_DATA") == 0){
-          strcpy(simDataName, str2);
-          numSimData++;
+          if(numSimData<NSIMDATA)
+            {
+              strcpy(simDataName[numSimData], str2);
+              numSimData++;
+            }
         }  
         if (strcmp(str1, "ADD_BACKGROUND") == 0) {
           if (strcmp(str2, "step") == 0)
@@ -97,10 +100,6 @@ void readConfigFile(const char *fileName) {
       {
         if (strcmp(str1, "<---END_OF_PARAMETERS--->") == 0)
           break;
-        /*else if (strcmp(str1, "SIMULATED_DATA") != 0) {
-          strcpy(simDataName, str1);
-          numSimData++;
-        }*/
       }
     }
   }
@@ -108,9 +107,14 @@ void readConfigFile(const char *fileName) {
 
   if(verbosity>0){
     printf("Taking experiment data from file: %s\n", expDataName);
-    if (numSimData > 0)
-      printf("Taking simulated data from file: %s\n", simDataName);
-    else {
+    if (numSimData > 0) {
+      printf("Taking simulated data from file(s): %s", simDataName[0]);
+      for(int i=1;i<numSimData;i++)
+        {
+          printf(", %s", simDataName[i]);
+        }
+      printf("\n");
+    } else {
       printf("ERROR: no simulated data specified!\n");
       exit(-1);
     }

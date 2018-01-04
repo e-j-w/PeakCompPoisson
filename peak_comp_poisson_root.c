@@ -13,6 +13,7 @@ int main(int argc, char *argv[]) {
 
   int i = 0;
   int j = 0;
+  int k = 0;
   FILE *expData, *simData, *results, *scalingFactors;
 
   if (argc != 2) {
@@ -27,7 +28,8 @@ int main(int argc, char *argv[]) {
   for (i = 0; i < NSPECT; i++)
     for (j = 0; j < S32K; j++) {
       expHist[i][j] = 0.;
-      simHist[i][j] = 0.;
+      for (k = 0; k < NSIMDATA; k++)
+        simHist[k][i][j] = 0.;
       scaledSimHist[i][j] = 0.;
     }
 
@@ -43,6 +45,8 @@ int main(int argc, char *argv[]) {
   for (i = 0; i < NSPECT; i++) {
     sprintf(simName, "sim_%2d", i);
     sim[i] = new TH1D(simName, ";;", S32K, 0, S32K - 1);
+  }
+  for (i = 0; i < NSPECT; i++) {
     sprintf(dataName, "data_%2d", i);
     data[i] = new TH1D(dataName, ";;", S32K, 0, S32K - 1);
   }
@@ -75,42 +79,36 @@ int main(int argc, char *argv[]) {
         "Integer array (.mca) and float array (.fmca) files are supported.\n");
     exit(-1);
   }
+  fclose(expData);
 
   for (i = 1; i < NSPECT; i++)
     for (j = 0; j < S32K; j++)
       data[i]->Fill(j, expHist[i][j]);
   
-  if ((simData = fopen(simDataName, "r")) == NULL) {
-    printf("ERROR: Cannot open the simulated data file %s!\n", simDataName);
-    exit(-1);
-  }
-  const char *dots = strrchr(simDataName, '.'); // get the file extension
-    if (strcmp(dots + 1, "mca") == 0)
-      readMCA(simData, simDataName, simHist);
-    else if (strcmp(dots + 1, "fmca") == 0)
-      readFMCA(simData, simDataName, simHist);
-    else {
-      printf("ERROR: Improper type of input file: %s\n", simDataName);
-      printf(
-          "Integer array (.mca) and float array (.fmca) files are supported.\n");
-      exit(-1);
+  for(i = 0; i < numSimData; i++)
+    {
+      if ((simData = fopen(simDataName[i], "r")) == NULL) {
+        printf("ERROR: Cannot open the simulated data file %s!\n", simDataName[i]);
+        exit(-1);
+      }
+      const char *dots = strrchr(simDataName[i], '.'); // get the file extension
+      if (strcmp(dots + 1, "mca") == 0)
+        readMCA(simData, simDataName[i], simHist[i]);
+      else if (strcmp(dots + 1, "fmca") == 0)
+        readFMCA(simData, simDataName[i], simHist[i]);
+      else {
+        printf("ERROR: Improper type of input file: %s\n", simDataName[i]);
+        printf(
+            "Integer array (.mca) and float array (.fmca) files are supported.\n");
+        exit(-1);
+      }
+      fclose(simData);
     }
-  // sim data always a float
-  /*for (i = 0; i <= endSpectrum; i++)
-    if (fread(simHist[i], S32K * sizeof(float), 1, simData) != 1) {
-      printf("ERROR: Error reading file %s!\n", simDataName);
-      printf("Verify that the format and number of spectra in the file are "
-             "correct.\n");
-      exit(-1);
-    }*/
 
-  // read into ROOT
+  /*// read into ROOT
   for (i = 0; i < numSpectra; i++)
     for (j = 0; j < S32K; j++)
-      sim[i]->Fill(j, simHist[i][j]);
-
-  fclose(expData);
-  fclose(simData);
+      sim[i]->Fill(j, simHist[0][i][j]);*/
 
   if(verbosity>0)
     printf("Spectra read in...\n");
@@ -121,22 +119,26 @@ int main(int argc, char *argv[]) {
   // scale simulated data
   for (i = 0; i < numSpectra; i++)
     for (j = 0; j < S32K; j++)
-      scaledSimHist[spectrum[i]][j] = aFinal[0][i] * simHist[spectrum[i]][j];
+      {
+        scaledSimHist[spectrum[i]][j]=0.;
+        for(k=0;k<numSimData;k++)
+          scaledSimHist[spectrum[i]][j] += aFinal[k+3][i] * simHist[k][spectrum[i]][j];
+      }
 
   // add background to simulated data
   for (i = 0; i < numSpectra; i++)
     for (j = 0; j < S32K; j++){
       if (addBackground == 1){
         scaledSimHist[spectrum[i]][j] =
-          scaledSimHist[spectrum[i]][j] + aFinal[1][i] +
-          aFinal[2][i] * erfc(((double)j - sfc[i]) / sfw[i]);
+          scaledSimHist[spectrum[i]][j] + aFinal[0][i] +
+          aFinal[1][i] * erfc(((double)j - sfc[i]) / sfw[i]);
       }else if (addBackground == 2){
         scaledSimHist[spectrum[i]][j] =
-          scaledSimHist[spectrum[i]][j] + aFinal[1][i] +
-          aFinal[2][i] * (double)j;
+          scaledSimHist[spectrum[i]][j] + aFinal[0][i] +
+          aFinal[1][i] * (double)j;
       }else if (addBackground == 3){
         scaledSimHist[spectrum[i]][j] =
-          scaledSimHist[spectrum[i]][j] + aFinal[1][i];
+          scaledSimHist[spectrum[i]][j] + aFinal[0][i];
       }else{
         scaledSimHist[spectrum[i]][j] =
           scaledSimHist[spectrum[i]][j];
@@ -197,19 +199,24 @@ double lrchisq(const double *par) {
   double ni = 0.;      // experiment
   double lrchisq = 0.; // likelihood ratio chisq
   int i = 0;
+  int j = 0;
 
   for (i = startCh[spCurrent]; i <= endCh[spCurrent]; i++) {
     ni = expCurrent[i]; // events in ith bin
 
-    // calculate model in the ith bin
+    yi=0;
+    for(j=0; j<numSimData; j++)
+      {
+        // calculate model in the ith bin
+        yi += par[j+3] * simCurrent[j][i];
+      }
+    // add background if neccesary
     if (addBackground == 1){
-      yi = par[0] * simCurrent[i] + par[1] + par[2] * erfc(((double)i - sfc[spCurrent]) / sfw[spCurrent]);
+      yi += par[0] + par[1] * erfc(((double)i - sfc[spCurrent]) / sfw[spCurrent]);
     }else if (addBackground == 2){
-      yi = par[0] * simCurrent[i] + par[1] + par[2] * (double)i;
+      yi += par[0] + par[1] * (double)i;
     }else if (addBackground == 3){
-      yi = par[0] * simCurrent[i] + par[1];
-    }else{
-      yi = par[0] * simCurrent[i];
+      yi += par[0];
     }
 
     // evaluate chisq given input parameters
@@ -220,7 +227,8 @@ double lrchisq(const double *par) {
   }
   lrchisq *= 2.;
 
-  //printf("Parameters: %f %f %f, computed lrchisq: %f\n",par[0],par[1],par[2],lrchisq);
+  /*printf("Parameters: %f %f %f %f, computed lrchisq: %f\n",par[0],par[1],par[2],par[3],lrchisq);
+  getc(stdin);*/
   return lrchisq;
 }
 
@@ -231,6 +239,7 @@ double pchisq(const double *par) {
   double ni = 0.;     // experiment
   double pchisq = 0.; // pearson chisq
   int i = 0;
+  int j = 0;
 
   for (i = startCh[spCurrent]; i <= endCh[spCurrent]; i++) {
     ni = expCurrent[i]; // events in ith bin
@@ -238,15 +247,19 @@ double pchisq(const double *par) {
     if (ni < 0.)
       ni = 0.;
 
-    // calculate model in the ith bin
+    yi=0;
+    for(j=0; j<numSimData; j++)
+      {
+        // calculate model in the ith bin
+        yi += par[j+3] * simCurrent[j][i];
+      }
+    // add background if neccesary
     if (addBackground == 1){
-      yi = par[0] * simCurrent[i] + par[1] + par[2] * erfc(((double)i - sfc[spCurrent]) / sfw[spCurrent]);
+      yi += par[0] + par[1] * erfc(((double)i - sfc[spCurrent]) / sfw[spCurrent]);
     }else if (addBackground == 2){
-      yi = par[0] * simCurrent[i] + par[1] + par[2] * (double)i;
+      yi += par[0] + par[1] * (double)i;
     }else if (addBackground == 3){
-      yi = par[0] * simCurrent[i] + par[1];
-    }else{
-      yi = par[0] * simCurrent[i];
+      yi += par[0];
     }
     
 
@@ -263,19 +276,24 @@ double nchisq(const double *par) {
   double ni = 0.;     // experiment
   double nchisq = 0.; // neyman ratio chisq
   int i = 0;
+  int j = 0;
 
   for (i = startCh[spCurrent]; i <= endCh[spCurrent]; i++) {
     ni = expCurrent[i]; // events in ith bin
 
-    // calculate model in the ith bin
+    yi=0;
+    for(j=0; j<numSimData; j++)
+      {
+        // calculate model in the ith bin
+        yi += par[j+3] * simCurrent[j][i];
+      }
+    // add background if neccesary
     if (addBackground == 1){
-      yi = par[0] * simCurrent[i] + par[1] + par[2] * erfc(((double)i - sfc[spCurrent]) / sfw[spCurrent]);
+      yi += par[0] + par[1] * erfc(((double)i - sfc[spCurrent]) / sfw[spCurrent]);
     }else if (addBackground == 2){
-      yi = par[0] * simCurrent[i] + par[1] + par[2] * (double)i;
+      yi += par[0] + par[1] * (double)i;
     }else if (addBackground == 3){
-      yi = par[0] * simCurrent[i] + par[1];
-    }else{
-      yi = par[0] * simCurrent[i];
+      yi += par[0];
     }
 
     // evaluate chisq given input parameters
@@ -288,6 +306,8 @@ double nchisq(const double *par) {
 void find_chisqMin() {
   int i = 0;
   int j = 0;
+  int k = 0;
+  char str[256];
   double intExp,intSim;
 
   if(verbosity>0)
@@ -313,8 +333,10 @@ void find_chisqMin() {
     // (via global parameters)
     for (j = 0; j < S32K; j++) {
       expCurrent[j] = (double)expHist[spectrum[i]][j];
-      simCurrent[j] = (double)simHist[spectrum[i]][j];
-      
+    }
+    for (j = 0; j < S32K; j++) {
+      for (k=0;k<numSimData;k++)
+        simCurrent[k][j] = (double)simHist[k][spectrum[i]][j];
     }
     spCurrent = i;
 
@@ -322,7 +344,8 @@ void find_chisqMin() {
     intSim=0.;
     intExp=0.;
     for (j = startCh[spCurrent]; j <= endCh[spCurrent]; j++){
-      intSim += (double)simHist[spectrum[i]][j];
+      for (k=0;k<numSimData;k++)
+        intSim += (double)simHist[k][spectrum[i]][j];
       intExp += (double)expHist[spectrum[i]][j]; 
     }
 
@@ -338,16 +361,21 @@ void find_chisqMin() {
 
     // create function wrapper for minmizer
     // a IMultiGenFunction type
-    ROOT::Math::Functor lr(&lrchisq, 3); // likelihood ratio chisq
-    /* ROOT::Math::Functor lr(&nchisq,3); // neyman chisq */
-    /* ROOT::Math::Functor lr(&pchisq,3); // pearson chisq - inf problems! */
+    ROOT::Math::Functor lr(&lrchisq, 3+NSIMDATA); // likelihood ratio chisq
+    /* ROOT::Math::Functor lr(&nchisq,3+NSIMDATA); // neyman chisq */
+    /* ROOT::Math::Functor lr(&pchisq,3+NSIMDATA); // pearson chisq - inf problems! */
 
     // step size and starting variables
     // may need to change for best performance
     // under different running conditions
     double ratio = intExp/intSim;
-    double variable[3] = {ratio,ratio,ratio};
-    double step[3] = {ratio/10., ratio/10., ratio/10.};
+    double variable[3+NSIMDATA];
+    double step[3+NSIMDATA];
+
+    for (j=0;j<3+NSIMDATA;j++){
+      variable[j] = ratio;
+      step[j] = ratio/10.;
+    }
 
     // 94Sr (low stats)
     // double step[3] = {0.00001,0.0001,0.0001};
@@ -357,14 +385,18 @@ void find_chisqMin() {
     // double step[3] = {0.001,0.001,0.001};
     // double variable[3] = {0.01,0.01,0.01};
 
-    
-
     min->SetFunction(lr);
 
     // Set pars for minimization
-    min->SetVariable(0, "a0", variable[0], step[0]);
+    
+    for (j=0;j<3+NSIMDATA;j++){
+      sprintf(str, "a%i", j);
+      min->SetVariable(j, str, variable[j], step[j]);
+    }
+    
+    /*min->SetVariable(0, "a0", variable[0], step[0]);
     min->SetVariable(1, "a1", variable[1], step[1]);
-    min->SetVariable(2, "a2", variable[2], step[2]);
+    min->SetVariable(2, "a2", variable[2], step[2]);*/
 
     // variable limits (optional)
     /* min->SetVariableLimits(0,0.,1E3); */
@@ -394,7 +426,7 @@ void find_chisqMin() {
 
     // assuming 3 parameters
     // save pars
-    for (j = 0; j < 3; j++)
+    for (j = 0; j < 3+NSIMDATA; j++)
       aFinal[j][i] = xs[j];
 
     // add to total chisq
