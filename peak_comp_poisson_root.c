@@ -29,8 +29,11 @@ int main(int argc, char *argv[]) {
     for (j = 0; j < S32K; j++) {
       expHist[i][j] = 0.;
       for (k = 0; k < NSIMDATA; k++)
-        simHist[k][i][j] = 0.;
-      scaledSimHist[i][j] = 0.;
+        {
+          simHist[k][i][j] = 0.;
+          scaledSimHist[k][i][j] = 0.;
+        }
+        
     }
 
   for (i = 0; i < NPAR; i++)
@@ -119,29 +122,27 @@ int main(int argc, char *argv[]) {
   // scale simulated data
   for (i = 0; i < numSpectra; i++)
     for (j = 0; j < S32K; j++)
-      {
-        scaledSimHist[spectrum[i]][j]=0.;
-        for(k=0;k<numSimData;k++)
-          scaledSimHist[spectrum[i]][j] += aFinal[k+3][i] * simHist[k][spectrum[i]][j];
-      }
+      for(k=0;k<numSimData;k++)
+        {
+          scaledSimHist[k][spectrum[i]][j]=0.;
+          scaledSimHist[k][spectrum[i]][j] += aFinal[k+3][i] * simHist[k][spectrum[i]][j];
+        }
 
   // add background to simulated data
   for (i = 0; i < numSpectra; i++)
     for (j = 0; j < S32K; j++){
       if (addBackground == 1){
-        scaledSimHist[spectrum[i]][j] =
-          scaledSimHist[spectrum[i]][j] + aFinal[0][i] +
+        bgHist[spectrum[i]][j] =
+          aFinal[0][i] +
           aFinal[1][i] * erfc(((double)j - sfc[i]) / sfw[i]);
       }else if (addBackground == 2){
-        scaledSimHist[spectrum[i]][j] =
-          scaledSimHist[spectrum[i]][j] + aFinal[0][i] +
+        bgHist[spectrum[i]][j] =
+          aFinal[0][i] +
           aFinal[1][i] * (double)j;
       }else if (addBackground == 3){
-        scaledSimHist[spectrum[i]][j] =
-          scaledSimHist[spectrum[i]][j] + aFinal[0][i];
+        bgHist[spectrum[i]][j] = aFinal[0][i];
       }else{
-        scaledSimHist[spectrum[i]][j] =
-          scaledSimHist[spectrum[i]][j];
+        bgHist[spectrum[i]][j] = 0.;
       }
       
     }
@@ -150,7 +151,12 @@ int main(int argc, char *argv[]) {
   // fit result histogram
   for (i = 0; i < numSpectra; i++)
     for (j = 0; j < S32K; j++)
-      resultsHist[spectrum[i]][j] = (float)scaledSimHist[spectrum[i]][j];
+      {
+        resultsHist[spectrum[i]][j] = bgHist[spectrum[i]][j];
+        for(k=0;k<numSimData;k++)
+          resultsHist[spectrum[i]][j] += (float)scaledSimHist[k][spectrum[i]][j];
+      }
+      
 
   // print output
   if(verbosity>0)
@@ -322,7 +328,8 @@ void find_chisqMin() {
         ROOT::Math::Factory::CreateMinimizer(minName, algoName);
 
     // set tolerance , etc...
-    min->SetMaxFunctionCalls(1000000); // for Minuit
+    min->SetMaxFunctionCalls(10000000); // for Minuit
+    min->SetMaxIterations(100000);
     min->SetTolerance(0.001);
     if(verbosity>1)
       min->SetPrintLevel(1);
@@ -373,8 +380,8 @@ void find_chisqMin() {
     double step[3+NSIMDATA];
 
     for (j=0;j<3+NSIMDATA;j++){
-      variable[j] = ratio;
-      step[j] = ratio/10.;
+      variable[j] = ratio/2.;
+      step[j] = ratio;
     }
 
     // 94Sr (low stats)
@@ -437,20 +444,41 @@ void find_chisqMin() {
 }
 
 void plotSpectra() {
-  int i, j;
+  int i, j, k;
   TH1D *results[NSPECT];
+  TH1D *resultsBGData[NSPECT];
+  TH1D *resultsSimData[NSIMDATA][NSPECT];
   TCanvas *c = new TCanvas("c1", "", 1618, 1000);
 
   // initialize and fill results histo
-  char resultsName[132];
+  char resultsName[132],resultsBGName[132],resultsSimDataName[132];
   for (i = 0; i < NSPECT; i++) {
     sprintf(resultsName, "results_%2d", i);
     results[i] = new TH1D(resultsName, ";;", S32K, 0, S32K - 1);
+    if(plotMode>=1)
+      {
+        sprintf(resultsBGName, "resultsBG_%2d", i);
+        resultsBGData[i] = new TH1D(resultsName, ";;", S32K, 0, S32K - 1);
+        for(k=0;k<numSimData;k++)
+          {
+            sprintf(resultsSimDataName, "resultsSimData_%2d_%2d", i, k);
+            resultsSimData[k][i] = new TH1D(resultsSimDataName, ";;", S32K, 0, S32K - 1);
+          }
+      }
+    
   }
   // be careful with indicies here
   for (i = 0; i < numSpectra; i++)
     for (j = 0; j < S32K; j++)
-      results[spectrum[i]]->Fill(j, resultsHist[spectrum[i]][j]);
+      {
+        results[spectrum[i]]->Fill(j, resultsHist[spectrum[i]][j]);
+        if(plotMode>=1)
+          {
+            resultsBGData[spectrum[i]]->Fill(j, bgHist[spectrum[i]][j]);
+            for(k=0;k<numSimData;k++)
+              resultsSimData[k][spectrum[i]]->Fill(j, scaledSimHist[k][spectrum[i]][j]);
+          }
+      }
 
   // display limits
   Double_t low[NSPECT], high[NSPECT];
@@ -474,17 +502,38 @@ void plotSpectra() {
     c->cd(i);
     // data in black
     data[i]->SetLineStyle(1);
-    data[i]->SetLineWidth(1);
-    data[i]->SetLineColor(kBlack);
+    data[i]->SetLineWidth(2);
+    data[i]->SetLineColor(12);
     data[i]->GetXaxis()->SetRangeUser(low[i], high[i]);
     data[i]->SetStats(0);
     data[i]->Draw();
 
     // simulation in red
     results[i]->SetLineStyle(1);
-    results[i]->SetLineWidth(1);
-    results[i]->SetLineColor(kRed);
+    results[i]->SetLineWidth(2);
+    results[i]->SetLineColor(46);
     results[i]->Draw("SAME");
+    if(plotMode>=1)
+      {
+        //plot individual simulated data
+        for(k=0;k<numSimData;k++)
+          {
+            resultsSimData[k][i]->SetLineStyle(1);
+            resultsSimData[k][i]->SetLineWidth(1);
+            resultsSimData[k][i]->SetLineColor(799+k*20);
+            resultsSimData[k][i]->Draw("SAME");
+          }
+        if(plotMode!=2)
+          {
+            //plot background
+            resultsBGData[i]->SetLineStyle(1);
+            resultsBGData[i]->SetLineWidth(1);
+            resultsBGData[i]->SetLineColor(920);
+            resultsBGData[i]->Draw("SAME");
+          }
+        
+      }
+    
   }
 
   c->cd(1);
@@ -492,6 +541,15 @@ void plotSpectra() {
   TLegend *leg = new TLegend(0.70, 0.85, 0.90, 0.95);
   leg->AddEntry(data[1], "Experiment", "l");
   leg->AddEntry(results[1], "Simulation", "l");
+  if(plotMode>=1)
+    {
+      for(k=0;k<numSimData;k++)
+        {
+          sprintf(resultsName, "Branch %i", k+1);
+          leg->AddEntry(resultsSimData[k][1], resultsName, "l");
+        }
+      
+    }
   leg->SetFillColor(0);
   leg->SetFillStyle(0);
   leg->SetBorderSize(0);

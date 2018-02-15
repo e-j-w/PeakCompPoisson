@@ -32,7 +32,8 @@ int    readFMCA(FILE* inp,char* filename,float inpHist[NSPECT][S32K]);
 float  expHist[NSPECT][S32K];
 float  simHist[NSIMDATA][NSPECT][S32K];
 double chisq;
-double scaledSimHist[NSPECT][S32K];
+double scaledSimHist[NSIMDATA][NSPECT][S32K];
+double bgHist[NSPECT][S32K];
 float  resultsHist[NSPECT][S32K];
 
 //global flags

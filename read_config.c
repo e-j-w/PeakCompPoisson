@@ -4,6 +4,7 @@ int spectrum[NSPECT], startCh[NSPECT], endCh[NSPECT], numSpectra, endSpectrum,
 double sfc[NSPECT], sfw[NSPECT];
 int addBackground; // 0=no, 1=constant background
 int plotOutput;    // 0=no, 1=yes, 2=detailed
+int plotMode;      // 0 = normal, 1=detailed
 int saveStats;     // 0=no, 1=yes
 int saveBG;        // 0=no, 1=yes
 int saveResults;   // 0=no, 1=yes
@@ -63,6 +64,16 @@ void readConfigFile(const char *fileName) {
             plotOutput = 2;
           else
             plotOutput = 0;
+        }
+        if (strcmp(str1, "PLOT_MODE") == 0) {
+          if (strcmp(str2, "normals") == 0)
+            plotMode = 0;
+          else if (strcmp(str2, "detailed") == 0)
+            plotMode = 1;
+          else if (strcmp(str2, "detailed_nobg") == 0)
+            plotMode = 2;
+          else
+            plotMode = 0;
         }
         if (strcmp(str1, "VERBOSE") == 0) {
           if (strcmp(str2, "yes") == 0)
