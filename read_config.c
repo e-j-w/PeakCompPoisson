@@ -4,6 +4,7 @@ int spectrum[NSPECT], startCh[NSPECT], endCh[NSPECT], numSpectra, endSpectrum,
 double sfc[NSPECT], sfw[NSPECT];
 int addBackground; // 0=no, 1=constant background
 int plotOutput;    // 0=no, 1=yes, 2=detailed
+int forcePosAmp;   // 0=no, 1=yes
 int plotMode;      // 0 = normal, 1=detailed
 int saveStats;     // 0=no, 1=yes
 int saveBG;        // 0=no, 1=yes
@@ -64,6 +65,12 @@ void readConfigFile(const char *fileName) {
             plotOutput = 2;
           else
             plotOutput = 0;
+        }
+        if (strcmp(str1, "FORCE_POSITIVE_AMPLITUDE") == 0) {
+          if (strcmp(str2, "yes") == 0)
+            forcePosAmp = 1;
+          else
+            forcePosAmp = 0;
         }
         if (strcmp(str1, "PLOT_MODE") == 0) {
           if (strcmp(str2, "normals") == 0)

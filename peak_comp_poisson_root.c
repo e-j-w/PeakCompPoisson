@@ -2,14 +2,8 @@
 #include "read_config.c"
 
 int main(int argc, char *argv[]) {
-  // Creating an instance of TApplication
-  // This is evidently needed for auto-loading of ROOT libraries,
-  // otherwise the program may crash upon execution depending on how ROOT
-  // is set up.
-  // http://root.cern.ch/phpBB3/viewtopic.php?f=3&t=14064
-  int ac;
-  char *av[10];
-  theApp = new TApplication("App", &ac, av);
+
+  
 
   int i = 0;
   int j = 0;
@@ -22,6 +16,8 @@ int main(int argc, char *argv[]) {
            "specified and generates cool statistics.\n\n");
     exit(-1);
   }
+
+  
 
   // initialize values
   addBackground = 0;
@@ -125,7 +121,7 @@ int main(int argc, char *argv[]) {
       for(k=0;k<numSimData;k++)
         {
           scaledSimHist[k][spectrum[i]][j]=0.;
-          scaledSimHist[k][spectrum[i]][j] += aFinal[k+3][i] * simHist[k][spectrum[i]][j];
+          scaledSimHist[k][spectrum[i]][j] += aFinal[k+2][i] * simHist[k][spectrum[i]][j];
         }
 
   // add background to simulated data
@@ -156,7 +152,21 @@ int main(int argc, char *argv[]) {
         for(k=0;k<numSimData;k++)
           resultsHist[spectrum[i]][j] += (float)scaledSimHist[k][spectrum[i]][j];
       }
+
+  //calculate chisq (using likelihood ratio method)
+  double yi,ni;
+  for (i = 0; i < numSpectra; i++)
+    for (j = startCh[i]; j <= endCh[i]; j++){
+      ni = (double)expHist[spectrum[i]][j];
+      yi = resultsHist[spectrum[i]][j];
+      // evaluate chisq given input parameters
+      if ((ni > 0.)&&(yi != 0.))
+        chisq += (yi - ni + ni * log(ni / yi));
+      else
+        chisq += yi; // the log(0) case
       
+    }
+  chisq *= 2.;
 
   // print output
   if(verbosity>0)
@@ -191,9 +201,14 @@ int main(int argc, char *argv[]) {
     printf("%d %.9f\n", i + 1, aFinal[0][i]);
   }*/
 
+  
+
   // plot results
-  if (plotOutput >= 1)
+  if (plotOutput >= 1){
+    theApp=new TApplication("App", &argc, argv);
     plotSpectra();
+  }
+    
 
   return 0; // great success
 }
@@ -214,7 +229,7 @@ double lrchisq(const double *par) {
     for(j=0; j<numSimData; j++)
       {
         // calculate model in the ith bin
-        yi += par[j+3] * simCurrent[j][i];
+        yi += par[j+2] * simCurrent[j][i];
       }
     // add background if neccesary
     if (addBackground == 1){
@@ -226,7 +241,7 @@ double lrchisq(const double *par) {
     }
 
     // evaluate chisq given input parameters
-    if (ni > 0.)
+    if ((ni > 0.)&&(yi != 0.))
       lrchisq += (yi - ni + ni * log(ni / yi));
     else
       lrchisq += yi; // the log(0) case
@@ -257,7 +272,7 @@ double pchisq(const double *par) {
     for(j=0; j<numSimData; j++)
       {
         // calculate model in the ith bin
-        yi += par[j+3] * simCurrent[j][i];
+        yi += par[j+2] * simCurrent[j][i];
       }
     // add background if neccesary
     if (addBackground == 1){
@@ -291,7 +306,7 @@ double nchisq(const double *par) {
     for(j=0; j<numSimData; j++)
       {
         // calculate model in the ith bin
-        yi += par[j+3] * simCurrent[j][i];
+        yi += par[j+2] * simCurrent[j][i];
       }
     // add background if neccesary
     if (addBackground == 1){
@@ -320,6 +335,8 @@ void find_chisqMin() {
     printf("Fitting data...\n");
 
   for (i = 0; i < numSpectra; i++) {
+    if(verbosity>0)
+      printf("-Spectrum %i-\n",i+1);
     // for more information see minimizer class documentation
     // https://root.cern.ch/root/html/ROOT__Math__Minimizer.html
     char minName[132] = "Minuit";
@@ -368,20 +385,20 @@ void find_chisqMin() {
 
     // create function wrapper for minmizer
     // a IMultiGenFunction type
-    ROOT::Math::Functor lr(&lrchisq, 3+NSIMDATA); // likelihood ratio chisq
-    /* ROOT::Math::Functor lr(&nchisq,3+NSIMDATA); // neyman chisq */
-    /* ROOT::Math::Functor lr(&pchisq,3+NSIMDATA); // pearson chisq - inf problems! */
+    ROOT::Math::Functor lr(&lrchisq, 2+NSIMDATA); // likelihood ratio chisq
+    /* ROOT::Math::Functor lr(&nchisq,2+NSIMDATA); // neyman chisq */
+    /* ROOT::Math::Functor lr(&pchisq,2+NSIMDATA); // pearson chisq - inf problems! */
 
     // step size and starting variables
     // may need to change for best performance
     // under different running conditions
     double ratio = intExp/intSim;
-    double variable[3+NSIMDATA];
-    double step[3+NSIMDATA];
+    double variable[2+NSIMDATA];
+    double step[2+NSIMDATA];
 
-    for (j=0;j<3+NSIMDATA;j++){
+    for (j=0;j<2+NSIMDATA;j++){
       variable[j] = ratio/2.;
-      step[j] = ratio;
+      step[j] = ratio/100.;
     }
 
     // 94Sr (low stats)
@@ -396,19 +413,16 @@ void find_chisqMin() {
 
     // Set pars for minimization
     
-    for (j=0;j<3+NSIMDATA;j++){
+    for (j=0;j<2+NSIMDATA;j++){
       sprintf(str, "a%i", j);
       min->SetVariable(j, str, variable[j], step[j]);
+      //printf("Variable %i initialized to %f, step size %f",j,variable[j], step[j]);
+      //printf(".\n");
     }
     
     /*min->SetVariable(0, "a0", variable[0], step[0]);
     min->SetVariable(1, "a1", variable[1], step[1]);
     min->SetVariable(2, "a2", variable[2], step[2]);*/
-
-    // variable limits (optional)
-    /* min->SetVariableLimits(0,0.,1E3); */
-    /* min->SetVariableLimits(1,0.,1E3); */
-    /* min->SetVariableLimits(2,0.,1E3); */
 
     // do the minimization
     min->Minimize();
@@ -428,22 +442,36 @@ void find_chisqMin() {
               << " chi2/ndf: " << min->MinValue() / ndf << std::endl;
     std::cout << min->MinValue() << " ";*/
 
-    if(verbosity>0)
-      printf("Spectrum %i fit parameters: %f %f %f\n",i,xs[0],xs[1],xs[2]);
+    //if(verbosity>0)
+    //  printf("Spectrum %i fit parameters: %f %f %f\n",i,xs[0],xs[1],xs[2]);
 
     // assuming 3 parameters
     // save pars
-    for (j = 0; j < 3+NSIMDATA; j++)
+    for (j = 0; j < 2+NSIMDATA; j++)
       aFinal[j][i] = xs[j];
 
-    // add to total chisq
-    /* if(i==0 || i==4) // groups 1 and 5 only */
-    /* if(i==1 || i==3) // groups 2 and 4 only */
-    chisq += min->MinValue();
+    //clamp amplitudes to positive or zero value
+    if(forcePosAmp==1){
+      for (j = 2; j < 2+NSIMDATA; j++)
+        if(aFinal[j][i]<0.0)
+          aFinal[j][i] = 0.0;
+    }
+    
+
+    if(verbosity>0)
+      {
+        for(j=0; j<numSimData; j++)
+          {
+            printf("Amplitude of simulated data set %i: %f\n",j+1,aFinal[j+2][i]);
+          }
+        printf("\n");
+      }
+
   }
 }
 
 void plotSpectra() {
+  
   int i, j, k;
   TH1D *results[NSPECT];
   TH1D *resultsBGData[NSPECT];
@@ -519,7 +547,7 @@ void plotSpectra() {
         for(k=0;k<numSimData;k++)
           {
             resultsSimData[k][i]->SetLineStyle(1);
-            resultsSimData[k][i]->SetLineWidth(1);
+            resultsSimData[k][i]->SetLineWidth(2);
             resultsSimData[k][i]->SetLineColor(799+k*20);
             resultsSimData[k][i]->Draw("SAME");
           }
@@ -538,7 +566,11 @@ void plotSpectra() {
 
   c->cd(1);
   // x1,y1,x2,y2
-  TLegend *leg = new TLegend(0.70, 0.85, 0.90, 0.95);
+  TLegend *leg;
+  if(plotMode>=1)
+    leg = new TLegend(0.70, 0.85 - numSimData*0.05, 0.90, 0.95);
+  else
+    leg = new TLegend(0.70, 0.85, 0.90, 0.95);
   leg->AddEntry(data[1], "Experiment", "l");
   leg->AddEntry(results[1], "Simulation", "l");
   if(plotMode>=1)
