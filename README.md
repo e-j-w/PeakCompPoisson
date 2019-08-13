@@ -4,6 +4,8 @@ Peak comparison program using Poisson ML ratio chi-square
 
 Maintainers: Aaron Chester, Jonathan Williams
 
+*This branch is only tested with ROOT v5.x. For newer versions, try the master branch.*
+
 ## Description
 
 Uses Poisson maximum likelihood ratio chi-square for the comparison of experimental to Geant4-simulated RDM lineshapes for TIP experiment analysis. Utilizes the ROOT Minuit function minimization libraries for numerical minimization of chi-square statistic w.r.t. model parameters. Particularly useful for low statistics data sets.
