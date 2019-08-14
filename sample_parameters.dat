@@ -1,19 +1,22 @@
-EXPERIMENT_DATA             expt/sum_2548and3088gate.mca
-ADD_BACKGROUND              yes
+EXPERIMENT_DATA             ../na25_expt/thick_1042gate_5keVch.mca
+ADD_BACKGROUND              const
+FORCE_POSITIVE_AMPLITUDE    yes
+USE_RELATIVE_INTENSITIES    yes
 PLOT_OUTPUT                 no
 VERBOSE                     no
-SAVE_STATS		    					no
-STATS_DATA_NAME		    			stats_TigressGroup.dat
+SAVE_STATS		            no
 
-SIMULATED_DATA              mca/18_4.1_15.mca
+SIMULATED_DATA              ../4969/10/sim_5keVch_biased.mca 1 1
+SIMULATED_DATA              ../4969_6739feeding/10/sim_5keVch_biased.mca 0.158906936183264 0.214985815679432
+SIMULATED_DATA              ../4969_7621feeding/10/sim_5keVch_biased.mca 0.121194526670479	0.224866235588867
 
-SPECTRUM  START_CHANNEL END_CHANNEL STEP_C STEP_W
-1	  2880	        3173	    3026.0 80.0
-2	  2845	        3145	    2995.0 60.0
-3	  2732	        3158	    2945.0 40.0
-4	  2707	        3165	    2936.0 60.0
-5	  2682	        3158	    2920.0 80.0
-6	  2665	        3116	    2890.0 80.0
+SPECTRUM  START_CHANNEL END_CHANNEL
+1	  305	        315
+2	  302	        318
+3	  295	        315
+4	  285	        315
+5	  285	        300	
+6	  285	        300
 
 <---END_OF_PARAMETERS--->
 
@@ -27,9 +30,7 @@ Contains the path to the .mca file containing experiment data.
 
 ADD_BACKGROUND
 no: Don't add any background.
-step: Add a constant+step function (with centroid STEP_C and width sqrt(2)*STEP_W) background to the simulated data.
-lin: Add a linear background to the simulated data.
-const: Add a constant background to the simulated data.
+yes: Add a constant+step function (with centroid STEP_C and width sqrt(2)*STEP_W) background to the simulated data.
 
 PLOT_OUTPUT
 no: Show chisq stats only.

@@ -127,11 +127,7 @@ int main(int argc, char *argv[]) {
   // add background to simulated data
   for (i = 0; i < numSpectra; i++)
     for (j = 0; j < S32K; j++){
-      if (addBackground == 1){
-        bgHist[spectrum[i]][j] =
-          aFinal[0][i] +
-          aFinal[1][i] * erfc(((double)j - sfc[i]) / sfw[i]);
-      }else if (addBackground == 2){
+      if (addBackground == 2){
         bgHist[spectrum[i]][j] =
           aFinal[0][i] +
           aFinal[1][i] * (double)j;
@@ -225,16 +221,21 @@ double lrchisq(const double *par) {
   for (i = startCh[spCurrent]; i <= endCh[spCurrent]; i++) {
     ni = expCurrent[i]; // events in ith bin
 
+    // calculate model in the ith bin
     yi=0;
     for(j=0; j<numSimData; j++)
       {
-        // calculate model in the ith bin
-        yi += par[j+2] * simCurrent[j][i];
+        
+        if((j>=1)&&(useRelIntensities)&&(relIntensityAvailable[j])){
+          yi += par[2]*par[j+2] * simCurrent[j][i]; //amplitude relative to the 1st ampliutude
+        }else{
+          yi += par[j+2] * simCurrent[j][i];
+        }
+        
+        
       }
     // add background if neccesary
-    if (addBackground == 1){
-      yi += par[0] + par[1] * erfc(((double)i - sfc[spCurrent]) / sfw[spCurrent]);
-    }else if (addBackground == 2){
+    if (addBackground == 2){
       yi += par[0] + par[1] * (double)i;
     }else if (addBackground == 3){
       yi += par[0];
@@ -251,77 +252,6 @@ double lrchisq(const double *par) {
   /*printf("Parameters: %f %f %f %f, computed lrchisq: %f\n",par[0],par[1],par[2],par[3],lrchisq);
   getc(stdin);*/
   return lrchisq;
-}
-
-double pchisq(const double *par) {
-  // pearson chisq
-  // for more information see Baker and Cousins pg. 438 and Appendix
-  double yi = 0.;     // model
-  double ni = 0.;     // experiment
-  double pchisq = 0.; // pearson chisq
-  int i = 0;
-  int j = 0;
-
-  for (i = startCh[spCurrent]; i <= endCh[spCurrent]; i++) {
-    ni = expCurrent[i]; // events in ith bin
-
-    if (ni < 0.)
-      ni = 0.;
-
-    yi=0;
-    for(j=0; j<numSimData; j++)
-      {
-        // calculate model in the ith bin
-        yi += par[j+2] * simCurrent[j][i];
-      }
-    // add background if neccesary
-    if (addBackground == 1){
-      yi += par[0] + par[1] * erfc(((double)i - sfc[spCurrent]) / sfw[spCurrent]);
-    }else if (addBackground == 2){
-      yi += par[0] + par[1] * (double)i;
-    }else if (addBackground == 3){
-      yi += par[0];
-    }
-    
-
-    // evaluate chisq given input parameters
-    pchisq += (ni - yi) * (ni - yi) / yi;
-  }
-  return pchisq;
-}
-
-double nchisq(const double *par) {
-  // neyman chisq
-  // for more information see Baker and Cousins pg. 438 and Appendix
-  double yi = 0.;     // model
-  double ni = 0.;     // experiment
-  double nchisq = 0.; // neyman ratio chisq
-  int i = 0;
-  int j = 0;
-
-  for (i = startCh[spCurrent]; i <= endCh[spCurrent]; i++) {
-    ni = expCurrent[i]; // events in ith bin
-
-    yi=0;
-    for(j=0; j<numSimData; j++)
-      {
-        // calculate model in the ith bin
-        yi += par[j+2] * simCurrent[j][i];
-      }
-    // add background if neccesary
-    if (addBackground == 1){
-      yi += par[0] + par[1] * erfc(((double)i - sfc[spCurrent]) / sfw[spCurrent]);
-    }else if (addBackground == 2){
-      yi += par[0] + par[1] * (double)i;
-    }else if (addBackground == 3){
-      yi += par[0];
-    }
-
-    // evaluate chisq given input parameters
-    if (ni > 0.) // have to drop all bins where ni = 0
-      nchisq += (ni - yi) * (ni - yi) / ni;
-  }
-  return nchisq;
 }
 
 void find_chisqMin() {
@@ -373,21 +303,9 @@ void find_chisqMin() {
       intExp += (double)expHist[spectrum[i]][j]; 
     }
 
-    /*//print simulated values fed into minimizer
-    double expSum=0.,simSum=0.;
-    for (j = startCh[spCurrent]; j <= endCh[spCurrent]; j++){
-      printf("expCurrent[%i] = %f   simCurrent[%i] = %f\n",j,expCurrent[j],j,simCurrent[j]);
-      expSum+=expCurrent[j];
-      simSum+=simCurrent[j];  
-    }
-    printf("sum exp = %f   sum sim = %f, exp/sim ratio = %f\n",expSum,simSum,expSum/simSum);
-    getc(stdin);*/
-
     // create function wrapper for minmizer
     // a IMultiGenFunction type
-    ROOT::Math::Functor lr(&lrchisq, 2+NSIMDATA); // likelihood ratio chisq
-    /* ROOT::Math::Functor lr(&nchisq,2+NSIMDATA); // neyman chisq */
-    /* ROOT::Math::Functor lr(&pchisq,2+NSIMDATA); // pearson chisq - inf problems! */
+    ROOT::Math::Functor lr(&lrchisq, 2+numSimData); // likelihood ratio chisq
 
     // step size and starting variables
     // may need to change for best performance
@@ -396,33 +314,25 @@ void find_chisqMin() {
     double variable[2+NSIMDATA];
     double step[2+NSIMDATA];
 
-    for (j=0;j<2+NSIMDATA;j++){
+    for (j=0;j<2+numSimData;j++){
       variable[j] = ratio/2.;
       step[j] = ratio/100.;
     }
 
-    // 94Sr (low stats)
-    // double step[3] = {0.00001,0.0001,0.0001};
-    // double variable[3] = {0.0001,0.001,0.001};
-
-    // 84Kr (high stats)
-    // double step[3] = {0.001,0.001,0.001};
-    // double variable[3] = {0.01,0.01,0.01};
-
     min->SetFunction(lr);
 
     // Set pars for minimization
-    
-    for (j=0;j<2+NSIMDATA;j++){
+    for (j=0;j<2+numSimData;j++){
       sprintf(str, "a%i", j);
-      min->SetVariable(j, str, variable[j], step[j]);
+      if((j>=3)&&(useRelIntensities))
+        min->SetLimitedVariable(j, str, variable[j], step[j],ril[j-2],rih[j-2]); //set relative intensity
+      else if((j>=2)&&(forcePosAmp==1))
+        min->SetLimitedVariable(j, str, variable[j], step[j],0.0,5.0*ratio); //j>=2 for amplitudes
+      else
+        min->SetVariable(j, str, variable[j], step[j]);
       //printf("Variable %i initialized to %f, step size %f",j,variable[j], step[j]);
       //printf(".\n");
     }
-    
-    /*min->SetVariable(0, "a0", variable[0], step[0]);
-    min->SetVariable(1, "a1", variable[1], step[1]);
-    min->SetVariable(2, "a2", variable[2], step[2]);*/
 
     // do the minimization
     min->Minimize();
@@ -430,42 +340,27 @@ void find_chisqMin() {
     // grab parameters from minimum
     const double *xs = min->X();
 
-    // print results
-    // degrees of freedom assuming 3 pars
-    /*double ndf = (endCh[spCurrent] - startCh[spCurrent] + 1) - 3;
-    const double *exs = min->Errors();
-    std::cout << "spectrum " << i << " " << xs[0] << " " << exs[0] << " "
-              << xs[1] << " " << exs[1] << " " << xs[2] << " " << exs[2] << " "
-              << "chi2: " << min->MinValue()
-              << " chi2/ndf: " << min->MinValue() / ndf << std::endl;
-    std::cout << i << " chi2: " << min->MinValue()
-              << " chi2/ndf: " << min->MinValue() / ndf << std::endl;
-    std::cout << min->MinValue() << " ";*/
-
     //if(verbosity>0)
     //  printf("Spectrum %i fit parameters: %f %f %f\n",i,xs[0],xs[1],xs[2]);
 
     // assuming 3 parameters
     // save pars
-    for (j = 0; j < 2+NSIMDATA; j++)
-      aFinal[j][i] = xs[j];
-
-    //clamp amplitudes to positive or zero value
-    if(forcePosAmp==1){
-      for (j = 2; j < 2+NSIMDATA; j++)
-        if(aFinal[j][i]<0.0)
-          aFinal[j][i] = 0.0;
-    }
-    
-
-    if(verbosity>0)
-      {
-        for(j=0; j<numSimData; j++)
-          {
-            printf("Amplitude of simulated data set %i: %f\n",j+1,aFinal[j+2][i]);
-          }
-        printf("\n");
+    for (j = 0; j < 2+numSimData; j++){
+      if((j>=3)&&(useRelIntensities)&&(relIntensityAvailable[j-2])){
+        aFinal[j][i] = xs[j]*xs[2]; //intensity relative to first intensity
+      }else{
+        aFinal[j][i] = xs[j];
       }
+    }
+      
+
+    //print amplitudes
+    if(verbosity>0){
+      for (j = 2; j < 2+numSimData; j++){
+        printf("Spectrum %i, amplitude %i: %f\n",i+1,j-1,aFinal[j][i]);
+      }
+        
+    }
 
   }
 }

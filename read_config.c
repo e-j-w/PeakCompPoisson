@@ -1,17 +1,19 @@
 FILE *config;
 int spectrum[NSPECT], startCh[NSPECT], endCh[NSPECT], numSpectra, endSpectrum,
     maxNumCh, numSimData;
-double sfc[NSPECT], sfw[NSPECT];
+double ril[NSIMDATA], rih[NSIMDATA];
 int addBackground; // 0=no, 1=constant background
 int plotOutput;    // 0=no, 1=yes, 2=detailed
 int forcePosAmp;   // 0=no, 1=yes
+int useRelIntensities; //0=no, 1=yes
+int relIntensityAvailable[NSIMDATA]; //0=no, 1=yes
 int plotMode;      // 0 = normal, 1=detailed
 int saveStats;     // 0=no, 1=yes
 int saveBG;        // 0=no, 1=yes
 int saveResults;   // 0=no, 1=yes
-char expDataName[256], simDataName[NSIMDATA][256], statsDataName[256],
+char expDataName[256], simDataName[NSIMDATA][256],
     resultsDataName[256], bgDataName[256]; // file names
-char str[256], str1[256], str2[256];
+char str[256], str1[256], str2[256], str3[256];
 
 void readConfigFile(const char *fileName) {
   int index = 0;
@@ -28,8 +30,8 @@ void readConfigFile(const char *fileName) {
     if (fgets(str, 256, config) != NULL) {
       if (index < NSPECT)
         // spectrum, channel range and step function parameter data
-        if (sscanf(str, "%i %i %i %lf %lf", &spectrum[index], &startCh[index],
-                   &endCh[index], &sfc[index], &sfw[index]) == 5) {
+        if (sscanf(str, "%i %i %i", &spectrum[index], &startCh[index],
+                   &endCh[index]) == 3) {
           if (spectrum[index] > endSpectrum)
             endSpectrum = spectrum[index];
           if ((endCh[index] - startCh[index] + 1) > maxNumCh)
@@ -37,21 +39,41 @@ void readConfigFile(const char *fileName) {
           index++;
           numSpectra++;
         }
+      
+      //simulated data parameters
+      if(sscanf(str, "%s %s %lf %lf", str1, str2, &ril[numSimData], &rih[numSimData]) == 4)
+      {
+        if (strcmp(str1, "SIMULATED_DATA") == 0){
+          if(numSimData<NSIMDATA)
+            {
+              if((verbosity>0)&&(numSimData>0))
+                printf("Relative intensities provided for simulated data %i.\n",numSimData+1);
+              strcpy(simDataName[numSimData], str2);
+              relIntensityAvailable[numSimData]=1;
+              numSimData++;
+            }
+        }
+      }else if (sscanf(str, "%s %s", str1, str2) == 2)
+      {
+        if (strcmp(str1, "SIMULATED_DATA") == 0){
+          if(numSimData<NSIMDATA)
+            {
+              if((verbosity>0)&&(numSimData>0))
+                printf("Relative intensities not provided for simulated data %i.\n",numSimData+1);
+              strcpy(simDataName[numSimData], str2);  
+              relIntensityAvailable[numSimData]=0;
+              numSimData++;
+            }
+        }
+      }
+
       if (sscanf(str, "%s %s", str1, str2) == 2) // single parameter data
       {
         if (strcmp(str1, "EXPERIMENT_DATA") == 0)
           strcpy(expDataName, str2);
-        if (strcmp(str1, "SIMULATED_DATA") == 0){
-          if(numSimData<NSIMDATA)
-            {
-              strcpy(simDataName[numSimData], str2);
-              numSimData++;
-            }
-        }  
+        
         if (strcmp(str1, "ADD_BACKGROUND") == 0) {
-          if (strcmp(str2, "step") == 0)
-            addBackground = 1; //const + step function
-          else if (strcmp(str2, "lin") == 0)
+          if (strcmp(str2, "lin") == 0)
             addBackground = 2; //linear
           else if (strcmp(str2, "const") == 0)
             addBackground = 3; //constant
@@ -71,6 +93,12 @@ void readConfigFile(const char *fileName) {
             forcePosAmp = 1;
           else
             forcePosAmp = 0;
+        }
+        if (strcmp(str1, "USE_RELATIVE_INTENSITIES") == 0) {
+          if (strcmp(str2, "yes") == 0)
+            useRelIntensities = 1;
+          else
+            useRelIntensities = 0;
         }
         if (strcmp(str1, "PLOT_MODE") == 0) {
           if (strcmp(str2, "normals") == 0)
@@ -96,9 +124,6 @@ void readConfigFile(const char *fileName) {
           else
             saveStats = 0;
         }
-        if (strcmp(str1, "STATS_DATA_NAME") == 0)
-          strcpy(statsDataName, str2);
-
         if (strcmp(str1, "SAVE_RESULTS") == 0) {
           if (strcmp(str2, "yes") == 0)
             saveResults = 1;
@@ -130,6 +155,9 @@ void readConfigFile(const char *fileName) {
       for(int i=1;i<numSimData;i++)
         {
           printf(", %s", simDataName[i]);
+          if(useRelIntensities){
+            printf(" with relative intensity ranging from %.2lf to %.2lf",ril[i],rih[i]);
+          }
         }
       printf("\n");
     } else {
@@ -139,14 +167,8 @@ void readConfigFile(const char *fileName) {
     for (index = 0; index < numSpectra; index++)
       printf("Will compare spectrum %i from channels %i to %i.\n",
             spectrum[index], startCh[index], endCh[index]);
-    for (index = 0; index < numSpectra; index++)
-      printf("Will fit step function for spectrum %i using centroid %.2lf and "
-            "width %.2lf\n",
-            spectrum[index], sfc[index], sfw[index]);
     if (addBackground == 0)
       printf("Will not add background to simulated data.\n");
-    if (addBackground == 1)
-      printf("Will add a constant background + step function to simulated data.\n");
     if (addBackground == 2)
       printf("Will add a linear background to simulated data.\n");
     if (plotOutput == 0)
@@ -155,8 +177,6 @@ void readConfigFile(const char *fileName) {
       printf("Will plot output data.\n");
     if (plotOutput == 2)
       printf("Will plot detailed output data.\n");
-    if (saveStats == 1)
-      printf("Will save fit stats to file %s\n", statsDataName);
     if (saveResults == 1)
       printf("Saving scaled fit results.\n");
     if (saveBG == 1)

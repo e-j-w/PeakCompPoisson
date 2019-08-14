@@ -18,7 +18,7 @@ Uses Poisson maximum likelihood ratio chi-square for the comparison of experimen
 
 ## Installation
 
-Requires ROOT (tested with v5.x) to be installed with environment variables set up properly.  Environment variable setup can be done by adding to your `.bashrc` (and then reloading the terminal):
+Requires ROOT (tested with v6.x) to be installed with environment variables set up properly.  Environment variable setup can be done by adding to your `.bashrc` (and then reloading the terminal):
 
 ```
 #ROOT configuration in .bashrc
@@ -28,4 +28,4 @@ export ROOTLIB=$ROOTSYS/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ROOTLIB
 ```
 
-Once this is done, use `make` to compile.  Tested using g++ and GNU make on Ubuntu 16.04.
+Once this is done, use `make` to compile.  Tested using g++ and GNU make on Ubuntu 16.04 and CentOS 7.
