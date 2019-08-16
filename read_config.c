@@ -8,7 +8,6 @@ int forcePosAmp;   // 0=no, 1=yes
 int useRelIntensities; //0=no, 1=yes
 int relIntensityAvailable[NSIMDATA]; //0=no, 1=yes
 int plotMode;      // 0 = normal, 1=detailed
-int saveStats;     // 0=no, 1=yes
 int saveBG;        // 0=no, 1=yes
 int saveResults;   // 0=no, 1=yes
 char expDataName[256], simDataName[NSIMDATA][256],
@@ -117,12 +116,6 @@ void readConfigFile(const char *fileName) {
             verbosity = 2;
           else
             verbosity = 0;
-        }
-        if (strcmp(str1, "SAVE_STATS") == 0) {
-          if (strcmp(str2, "yes") == 0)
-            saveStats = 1;
-          else
-            saveStats = 0;
         }
         if (strcmp(str1, "SAVE_RESULTS") == 0) {
           if (strcmp(str2, "yes") == 0)

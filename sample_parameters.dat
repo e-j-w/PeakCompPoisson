@@ -4,7 +4,6 @@ FORCE_POSITIVE_AMPLITUDE    yes
 USE_RELATIVE_INTENSITIES    yes
 PLOT_OUTPUT                 no
 VERBOSE                     no
-SAVE_STATS		            no
 
 SIMULATED_DATA              ../4969/10/sim_5keVch_biased.mca 1 1
 SIMULATED_DATA              ../4969_6739feeding/10/sim_5keVch_biased.mca 0.158906936183264 0.214985815679432
