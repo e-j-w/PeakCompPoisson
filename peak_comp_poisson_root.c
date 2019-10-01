@@ -249,8 +249,8 @@ double lrchisq(const double *par) {
   }
   lrchisq *= 2.;
 
-  /*printf("Parameters: %f %f %f %f, computed lrchisq: %f\n",par[0],par[1],par[2],par[3],lrchisq);
-  getc(stdin);*/
+/*   printf("Parameters: %f %f %f %f, computed lrchisq: %f\n",par[0],par[1],par[2],par[3],lrchisq);
+  getc(stdin); */
   return lrchisq;
 }
 
@@ -318,6 +318,7 @@ void find_chisqMin() {
       variable[j] = ratio/2.;
       step[j] = ratio/100.;
     }
+    variable[1]/=100000.; //slope for linear background is usually very small
 
     min->SetFunction(lr);
 
@@ -429,13 +430,13 @@ void plotSpectra() {
     data[i]->SetLineColor(12);
     data[i]->GetXaxis()->SetRangeUser(low[i], high[i]);
     data[i]->SetStats(0);
-    data[i]->Draw();
+    data[i]->Draw("HIST");
 
     // simulation in red
     results[i]->SetLineStyle(1);
     results[i]->SetLineWidth(2);
     results[i]->SetLineColor(46);
-    results[i]->Draw("SAME");
+    results[i]->Draw("HIST SAME");
     if(plotMode>=1)
       {
         //plot individual simulated data
@@ -444,7 +445,7 @@ void plotSpectra() {
             resultsSimData[k][i]->SetLineStyle(1);
             resultsSimData[k][i]->SetLineWidth(2);
             resultsSimData[k][i]->SetLineColor(799+k*20);
-            resultsSimData[k][i]->Draw("SAME");
+            resultsSimData[k][i]->Draw("HIST SAME");
           }
         if(plotMode!=2)
           {
@@ -452,7 +453,7 @@ void plotSpectra() {
             resultsBGData[i]->SetLineStyle(1);
             resultsBGData[i]->SetLineWidth(1);
             resultsBGData[i]->SetLineColor(920);
-            resultsBGData[i]->Draw("SAME");
+            resultsBGData[i]->Draw("HIST SAME");
           }
         
       }

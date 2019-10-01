@@ -1,8 +1,6 @@
 # PeakCompPoisson
 
-Peak comparison program using Poisson ML ratio chi-square
-
-Maintainers: Aaron Chester, Jonathan Williams
+A peak comparison program using the Poisson maximum likelihood ratio chi-square method.
 
 ## Description
 
@@ -29,3 +27,9 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ROOTLIB
 ```
 
 Once this is done, use `make` to compile.  Tested using g++ and GNU make on Ubuntu 16.04 and CentOS 7.
+
+## Credits
+
+Original author: Aaron Chester
+
+Current maintainer: Jonathan Williams
