@@ -241,6 +241,11 @@ double lrchisq(const double *par) {
       yi += par[0];
     }
 
+    //model cannot give less than 0 counts
+    if(yi<0.0){
+      return 1E10;
+    }
+
     // evaluate chisq given input parameters
     if ((ni > 0.)&&(yi != 0.))
       lrchisq += (yi - ni + ni * log(ni / yi));
@@ -329,6 +334,8 @@ void find_chisqMin() {
         min->SetLimitedVariable(j, str, variable[j], step[j],ril[j-2],rih[j-2]); //set relative intensity
       else if((j>=2)&&(forcePosAmp==1))
         min->SetLimitedVariable(j, str, variable[j], step[j],0.0,5.0*ratio); //j>=2 for amplitudes
+      else if((j==1)&&(forceNegSlopeBG==1))
+        min->SetLimitedVariable(j, str, -1.0*variable[j], step[j]/100., -1000.0, 0.0); //slope not allowed to be positive
       else
         min->SetVariable(j, str, variable[j], step[j]);
       //printf("Variable %i initialized to %f, step size %f",j,variable[j], step[j]);

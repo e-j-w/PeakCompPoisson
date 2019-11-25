@@ -5,6 +5,7 @@ double ril[NSIMDATA], rih[NSIMDATA];
 int addBackground; // 0=no, 1=constant background
 int plotOutput;    // 0=no, 1=yes, 2=detailed
 int forcePosAmp;   // 0=no, 1=yes
+int forceNegSlopeBG; //0=no, 1=yes
 int useRelIntensities; //0=no, 1=yes
 int relIntensityAvailable[NSIMDATA]; //0=no, 1=yes
 int plotMode;      // 0 = normal, 1=detailed
@@ -92,6 +93,12 @@ void readConfigFile(const char *fileName) {
             forcePosAmp = 1;
           else
             forcePosAmp = 0;
+        }
+        if (strcmp(str1, "FORCE_NEGATIVE_SLOPE_BACKGROUND") == 0) {
+          if (strcmp(str2, "yes") == 0)
+            forceNegSlopeBG = 1;
+          else
+            forceNegSlopeBG = 0;
         }
         if (strcmp(str1, "USE_RELATIVE_INTENSITIES") == 0) {
           if (strcmp(str2, "yes") == 0)
