@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) {
   
 
   // plot results
-  if (plotOutput >= 1){
+  if (plotMode >= 0){
     theApp=new TApplication("App", &argc, argv);
     plotSpectra();
   }

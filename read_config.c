@@ -80,14 +80,6 @@ void readConfigFile(const char *fileName) {
           else
             addBackground = 0;
         }
-        if (strcmp(str1, "PLOT_OUTPUT") == 0) {
-          if (strcmp(str2, "yes") == 0)
-            plotOutput = 1;
-          else if (strcmp(str2, "detailed") == 0)
-            plotOutput = 2;
-          else
-            plotOutput = 0;
-        }
         if (strcmp(str1, "FORCE_POSITIVE_AMPLITUDE") == 0) {
           if (strcmp(str2, "yes") == 0)
             forcePosAmp = 1;
@@ -106,15 +98,15 @@ void readConfigFile(const char *fileName) {
           else
             useRelIntensities = 0;
         }
-        if (strcmp(str1, "PLOT_MODE") == 0) {
-          if (strcmp(str2, "normals") == 0)
+        if ((strcmp(str1, "PLOT_MODE") == 0)||(strcmp(str1, "PLOT_OUTPUT") == 0)) {
+          if (strcmp(str2, "yes") == 0)
             plotMode = 0;
           else if (strcmp(str2, "detailed") == 0)
             plotMode = 1;
           else if (strcmp(str2, "detailed_nobg") == 0)
             plotMode = 2;
           else
-            plotMode = 0;
+            plotMode = -1;
         }
         if (strcmp(str1, "VERBOSE") == 0) {
           if (strcmp(str2, "yes") == 0)
