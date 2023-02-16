@@ -131,9 +131,9 @@ void readConfigFile(const char *fileName) {
         if (strcmp(str1, "BACKGROUND_DATA_NAME") == 0)
           strcpy(bgDataName, str2);
       }
-      if (sscanf(str, "%s %s", str1, str2) == 1) // listing of simulated data
+      if(sscanf(str, "%s %s", str1, str2) == 1) // listing of simulated data
       {
-        if (strcmp(str1, "<---END_OF_PARAMETERS--->") == 0)
+        if(strcmp(str1, "<---END_OF_PARAMETERS--->") == 0)
           break;
       }
     }
@@ -142,7 +142,7 @@ void readConfigFile(const char *fileName) {
 
   if(verbosity>0){
     printf("Taking experiment data from file: %s\n", expDataName);
-    if (numSimData > 0) {
+    if(numSimData > 0){
       printf("Taking simulated data from file(s): %s", simDataName[0]);
       for(int i=1;i<numSimData;i++)
         {
@@ -152,26 +152,26 @@ void readConfigFile(const char *fileName) {
           }
         }
       printf("\n");
-    } else {
+    }else{
       printf("ERROR: no simulated data specified!\n");
       exit(-1);
     }
     for (index = 0; index < numSpectra; index++)
       printf("Will compare spectrum %i from channels %i to %i.\n",
             spectrum[index], startCh[index], endCh[index]);
-    if (addBackground == 0)
+    if(addBackground == 0)
       printf("Will not add background to simulated data.\n");
-    if (addBackground == 2)
+    if(addBackground == 2)
       printf("Will add a linear background to simulated data.\n");
-    if (plotOutput == 0)
+    if(plotOutput == 0)
       printf("Will not plot output data.\n");
-    if (plotOutput == 1)
+    if(plotOutput == 1)
       printf("Will plot output data.\n");
-    if (plotOutput == 2)
+    if(plotOutput == 2)
       printf("Will plot detailed output data.\n");
-    if (saveResults == 1)
+    if(saveResults == 1)
       printf("Saving scaled fit results.\n");
-    if (saveBG == 1)
+    if(saveBG == 1)
       printf("Will save fit background to file %s\n", bgDataName);
     printf("Finished reading parameter file...\n");
   }

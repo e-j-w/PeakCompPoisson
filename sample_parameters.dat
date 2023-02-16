@@ -20,36 +20,45 @@ SPECTRUM  START_CHANNEL END_CHANNEL
 <---END_OF_PARAMETERS--->
 
 
-This is a parameter file for the peak comparison code.  The code will analyze and compare data in the two specified .mca files, in the specified range of spectra and channels.  If you change the format of the file, prepare for unforeseen consequences.
+This is a parameter file for the peak comparison code.  
+The code will analyze and compare data in the two specified .mca files, 
+in the specified range of spectra and channels.  If you change the 
+format of the file, prepare for unforeseen consequences.
 
-Parameters and their descriptions follow:
+Valid parameters and their descriptions follow:
 
 EXPERIMENT_DATA
 Contains the path to the .mca file containing experiment data.
 
 ADD_BACKGROUND
 no: Don't add any background.
-yes: Add a constant+step function (with centroid STEP_C and width sqrt(2)*STEP_W) background to the simulated data.
+const: Add a constant background to the simulated data.
+lin: Add a linear background to the simulated data.
 
 PLOT_OUTPUT
 no: Show chisq stats only.
 yes: Show a plot of the simulated and experimental data alongside chisq stats.
 detailed: Same as 'yes', except plot all simulated datasets and background as well.
+detailed_nobg: Same as 'detailed', except don't show background.
 
 VERBOSE
-no: only print the fit chisq value (useful for interfacing with bash scripts)
-yes: print the results of reading in the parameter file and fitting
-debug: print the above plus debug info
+no: Only print the fit chisq value (useful for interfacing with bash scripts).
+yes: Print the results of reading in the parameter file and fitting.
+debug: Print the above plus debug info.
 
 SAVE_STATS
-no: do not save stats.
-yes: save chi-square and Bhattacharyya statistical analysis to a file.
+no: Do not save stats.
+yes: Save chi-square and Bhattacharyya statistical analysis to a file.
 
 STATS_DATA_NAME
 Path to .dat file containing the stats information. Column 1 is spectrum #, column 2 is chi-square, column 3 is Bhattacharyya.
 
 SIMULATED_DATA
-Contains the path(s) to the .mca file(s) containing simulated data.  Multiple datasets may be specified, each on a separate line.
+Contains the path(s) to the .mca file(s) containing simulated data.
+Multiple datasets may be specified, each on a separate line.
+Two numbers can be specified after the filename, corresponding 
+to low and high limits for the relative intensity of that data,
+relative to any other datasets specified.
 
 SPECTRUM  START_CHANNEL END_CHANNEL
 Contains a list of the spectra to analyze in the experiment and simulated data, along with the channel range to analyze.  Multiple spectra may be specified, each on a separate line.

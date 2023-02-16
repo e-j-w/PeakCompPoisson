@@ -28,6 +28,12 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ROOTLIB
 
 Once this is done, use `make` to compile.  Tested using g++ and GNU make on Ubuntu 16.04 and CentOS 7.
 
+## Use
+
+The `peak_comp_poisson` code takes a parameter file as its only argument.
+
+See the [sample parameter file](sample_parameters.dat), which contains a list of valid parameters that can be used.
+
 ## Credits
 
 Original author: Aaron Chester
