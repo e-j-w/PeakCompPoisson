@@ -80,29 +80,28 @@ int main(int argc, char *argv[]) {
   }
   fclose(expData);
 
-  for (i = 1; i < NSPECT; i++)
+  for (i = 0; i < NSPECT; i++)
     for (j = 0; j < S32K; j++)
       data[i]->Fill(j, expHist[i][j]);
   
-  for(i = 0; i < numSimData; i++)
-    {
-      if ((simData = fopen(simDataName[i], "r")) == NULL) {
-        printf("ERROR: Cannot open the simulated data file %s!\n", simDataName[i]);
-        exit(-1);
-      }
-      const char *dots = strrchr(simDataName[i], '.'); // get the file extension
-      if (strcmp(dots + 1, "mca") == 0)
-        readMCA(simData, simDataName[i], simHist[i]);
-      else if (strcmp(dots + 1, "fmca") == 0)
-        readFMCA(simData, simDataName[i], simHist[i]);
-      else {
-        printf("ERROR: Improper type of input file: %s\n", simDataName[i]);
-        printf(
-            "Integer array (.mca) and float array (.fmca) files are supported.\n");
-        exit(-1);
-      }
-      fclose(simData);
+  for(i = 0; i < numSimData; i++){
+    if ((simData = fopen(simDataName[i], "r")) == NULL) {
+      printf("ERROR: Cannot open the simulated data file %s!\n", simDataName[i]);
+      exit(-1);
     }
+    const char *dots = strrchr(simDataName[i], '.'); // get the file extension
+    if (strcmp(dots + 1, "mca") == 0)
+      readMCA(simData, simDataName[i], simHist[i]);
+    else if (strcmp(dots + 1, "fmca") == 0)
+      readFMCA(simData, simDataName[i], simHist[i]);
+    else {
+      printf("ERROR: Improper type of input file: %s\n", simDataName[i]);
+      printf(
+          "Integer array (.mca) and float array (.fmca) files are supported.\n");
+      exit(-1);
+    }
+    fclose(simData);
+  }
 
   /*// read into ROOT
   for (i = 0; i < numSpectra; i++)
@@ -116,22 +115,21 @@ int main(int argc, char *argv[]) {
   find_chisqMin();
 
   // scale simulated data
-  for (i = 0; i < numSpectra; i++)
-    for (j = 0; j < S32K; j++)
-      for(k=0;k<numSimData;k++)
-        {
-          scaledSimHist[k][spectrum[i]][j]=0.;
-          scaledSimHist[k][spectrum[i]][j] += aFinal[k+2][i] * simHist[k][spectrum[i]][j];
-        }
+  for(i = 0; i < numSpectra; i++)
+    for(j = 0; j < S32K; j++)
+      for(k=0;k<numSimData;k++){
+        scaledSimHist[k][spectrum[i]][j]=0.;
+        scaledSimHist[k][spectrum[i]][j] += aFinal[k+2][i] * simHist[k][spectrum[i]][j];
+      }
 
   // add background to simulated data
   for (i = 0; i < numSpectra; i++)
     for (j = 0; j < S32K; j++){
-      if (addBackground == 2){
+      if(addBackground == 2){
         bgHist[spectrum[i]][j] =
           aFinal[0][i] +
           aFinal[1][i] * (double)j;
-      }else if (addBackground == 3){
+      }else if(addBackground == 3){
         bgHist[spectrum[i]][j] = aFinal[0][i];
       }else{
         bgHist[spectrum[i]][j] = 0.;
@@ -204,7 +202,6 @@ int main(int argc, char *argv[]) {
     theApp=new TApplication("App", &argc, argv);
     plotSpectra();
   }
-    
 
   return 0; // great success
 }
@@ -386,41 +383,37 @@ void plotSpectra() {
   for (i = 0; i < NSPECT; i++) {
     sprintf(resultsName, "results_%2d", i);
     results[i] = new TH1D(resultsName, ";;", S32K, 0, S32K - 1);
-    if(plotMode>=1)
-      {
-        sprintf(resultsBGName, "resultsBG_%2d", i);
-        resultsBGData[i] = new TH1D(resultsName, ";;", S32K, 0, S32K - 1);
-        for(k=0;k<numSimData;k++)
-          {
-            sprintf(resultsSimDataName, "resultsSimData_%2d_%2d", i, k);
-            resultsSimData[k][i] = new TH1D(resultsSimDataName, ";;", S32K, 0, S32K - 1);
-          }
+    if(plotMode>=1){
+      sprintf(resultsBGName, "resultsBG_%2d", i);
+      resultsBGData[i] = new TH1D(resultsName, ";;", S32K, 0, S32K - 1);
+      for(k=0;k<numSimData;k++){
+        sprintf(resultsSimDataName, "resultsSimData_%2d_%2d", i, k);
+        resultsSimData[k][i] = new TH1D(resultsSimDataName, ";;", S32K, 0, S32K - 1);
       }
+    }
     
   }
   // be careful with indicies here
   for (i = 0; i < numSpectra; i++)
-    for (j = 0; j < S32K; j++)
-      {
-        results[spectrum[i]]->Fill(j, resultsHist[spectrum[i]][j]);
-        if(plotMode>=1)
-          {
-            resultsBGData[spectrum[i]]->Fill(j, bgHist[spectrum[i]][j]);
-            for(k=0;k<numSimData;k++)
-              resultsSimData[k][spectrum[i]]->Fill(j, scaledSimHist[k][spectrum[i]][j]);
-          }
+    for (j = 0; j < S32K; j++){
+      results[spectrum[i]]->Fill(j, resultsHist[spectrum[i]][j]);
+      if(plotMode>=1){
+        resultsBGData[spectrum[i]]->Fill(j, bgHist[spectrum[i]][j]);
+        for(k=0;k<numSimData;k++)
+          resultsSimData[k][spectrum[i]]->Fill(j, scaledSimHist[k][spectrum[i]][j]);
       }
+    }
 
   // display limits
   Double_t low[NSPECT], high[NSPECT];
 
   // divide canvas to accomodate all spectra
   // assumes number to plot <= 3*2=6
-  c->Divide(3, 2, 1E-6, 1E-6, 0);
+  c->Divide(3, (int)(ceil(numSpectra/3.0)), 1E-6, 1E-6, 0);
 
   // formatting the plot area
   // be careful with indicies
-  for (i = 1; i <= 6; i++) {
+  for (i = 1; i <= numSpectra; i++) {
     c->GetPad(i)->SetRightMargin(0.01);
     c->GetPad(i)->SetTopMargin(0.025);
     Int_t ind = i - 1;
@@ -429,41 +422,39 @@ void plotSpectra() {
   }
 
   // plot
-  for (i = 1; i <= 6; i++) {
+  for (i = 1; i <= numSpectra; i++) {
     c->cd(i);
+    Int_t ind = i - 1;
     // data in black
-    data[i]->SetLineStyle(1);
-    data[i]->SetLineWidth(2);
-    data[i]->SetLineColor(12);
-    data[i]->GetXaxis()->SetRangeUser(low[i], high[i]);
-    data[i]->SetStats(0);
-    data[i]->Draw("HIST");
+    data[ind]->SetLineStyle(1);
+    data[ind]->SetLineWidth(2);
+    data[ind]->SetLineColor(12);
+    data[ind]->GetXaxis()->SetRangeUser(low[i], high[i]);
+    data[ind]->SetStats(0);
+    data[ind]->Draw("HIST");
 
     // simulation in red
-    results[i]->SetLineStyle(1);
-    results[i]->SetLineWidth(2);
-    results[i]->SetLineColor(46);
-    results[i]->Draw("HIST SAME");
-    if(plotMode>=1)
-      {
-        //plot individual simulated data
-        for(k=0;k<numSimData;k++)
-          {
-            resultsSimData[k][i]->SetLineStyle(1);
-            resultsSimData[k][i]->SetLineWidth(2);
-            resultsSimData[k][i]->SetLineColor(799+k*20);
-            resultsSimData[k][i]->Draw("HIST SAME");
-          }
-        if(plotMode!=2)
-          {
-            //plot background
-            resultsBGData[i]->SetLineStyle(1);
-            resultsBGData[i]->SetLineWidth(1);
-            resultsBGData[i]->SetLineColor(920);
-            resultsBGData[i]->Draw("HIST SAME");
-          }
-        
+    results[ind]->SetLineStyle(1);
+    results[ind]->SetLineWidth(2);
+    results[ind]->SetLineColor(46);
+    results[ind]->Draw("HIST SAME");
+    if(plotMode>=1){
+      //plot individual simulated data
+      for(k=0;k<numSimData;k++){
+        resultsSimData[k][ind]->SetLineStyle(1);
+        resultsSimData[k][ind]->SetLineWidth(2);
+        resultsSimData[k][ind]->SetLineColor(799+k*20);
+        resultsSimData[k][ind]->Draw("HIST SAME");
       }
+      if(plotMode!=2){
+        //plot background
+        resultsBGData[ind]->SetLineStyle(1);
+        resultsBGData[ind]->SetLineWidth(1);
+        resultsBGData[ind]->SetLineColor(920);
+        resultsBGData[ind]->Draw("HIST SAME");
+      }
+      
+    }
     
   }
 
@@ -474,17 +465,15 @@ void plotSpectra() {
     leg = new TLegend(0.70, 0.85 - numSimData*0.05, 0.90, 0.95);
   else
     leg = new TLegend(0.70, 0.85, 0.90, 0.95);
-  leg->AddEntry(data[1], "Experiment", "l");
-  leg->AddEntry(results[1], "Simulation", "l");
-  if(plotMode>=1)
-    {
-      for(k=0;k<numSimData;k++)
-        {
-          sprintf(resultsName, "Branch %i", k+1);
-          leg->AddEntry(resultsSimData[k][1], resultsName, "l");
-        }
-      
+  leg->AddEntry(data[0], "Experiment", "l");
+  leg->AddEntry(results[0], "Simulation", "l");
+  if(plotMode>=1){
+    for(k=0;k<numSimData;k++){
+      sprintf(resultsName, "Branch %i", k+1);
+      leg->AddEntry(resultsSimData[k][0], resultsName, "l");
     }
+    
+  }
   leg->SetFillColor(0);
   leg->SetFillStyle(0);
   leg->SetBorderSize(0);

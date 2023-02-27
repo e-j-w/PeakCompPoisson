@@ -1,6 +1,5 @@
 FILE *config;
-int spectrum[NSPECT], startCh[NSPECT], endCh[NSPECT], numSpectra, endSpectrum,
-    maxNumCh, numSimData;
+int spectrum[NSPECT], startCh[NSPECT], endCh[NSPECT], numSpectra, endSpectrum, maxNumCh, numSimData;
 double ril[NSIMDATA], rih[NSIMDATA];
 int addBackground; // 0=no, 1=constant background
 int plotOutput;    // 0=no, 1=yes, 2=detailed
@@ -30,8 +29,7 @@ void readConfigFile(const char *fileName) {
     if (fgets(str, 256, config) != NULL) {
       if (index < NSPECT)
         // spectrum, channel range and step function parameter data
-        if (sscanf(str, "%i %i %i", &spectrum[index], &startCh[index],
-                   &endCh[index]) == 3) {
+        if (sscanf(str, "%i %i %i", &spectrum[index], &startCh[index], &endCh[index]) == 3) {
           if (spectrum[index] > endSpectrum)
             endSpectrum = spectrum[index];
           if ((endCh[index] - startCh[index] + 1) > maxNumCh)

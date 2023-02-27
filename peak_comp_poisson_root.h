@@ -19,8 +19,8 @@
 
 #define S32K        32768
 #define NPAR        20
-#define NSPECT      10
-#define NSIMDATA    10
+#define NSPECT      16
+#define NSIMDATA    16
 
 //forward declarations
 void   find_chisqMin(); // ROOT minimization class
