@@ -426,32 +426,32 @@ void plotSpectra() {
     c->cd(i);
     Int_t ind = i - 1;
     // data in black
-    data[ind]->SetLineStyle(1);
-    data[ind]->SetLineWidth(2);
-    data[ind]->SetLineColor(12);
-    data[ind]->GetXaxis()->SetRangeUser(low[i], high[i]);
-    data[ind]->SetStats(0);
-    data[ind]->Draw("HIST");
+    data[spectrum[ind]]->SetLineStyle(1);
+    data[spectrum[ind]]->SetLineWidth(2);
+    data[spectrum[ind]]->SetLineColor(12);
+    data[spectrum[ind]]->GetXaxis()->SetRangeUser(low[i], high[i]);
+    data[spectrum[ind]]->SetStats(0);
+    data[spectrum[ind]]->Draw("HIST");
 
     // simulation in red
-    results[ind]->SetLineStyle(1);
-    results[ind]->SetLineWidth(2);
-    results[ind]->SetLineColor(46);
-    results[ind]->Draw("HIST SAME");
+    results[spectrum[ind]]->SetLineStyle(1);
+    results[spectrum[ind]]->SetLineWidth(2);
+    results[spectrum[ind]]->SetLineColor(46);
+    results[spectrum[ind]]->Draw("HIST SAME");
     if(plotMode>=1){
       //plot individual simulated data
       for(k=0;k<numSimData;k++){
-        resultsSimData[k][ind]->SetLineStyle(1);
-        resultsSimData[k][ind]->SetLineWidth(2);
-        resultsSimData[k][ind]->SetLineColor(799+k*20);
-        resultsSimData[k][ind]->Draw("HIST SAME");
+        resultsSimData[k][spectrum[ind]]->SetLineStyle(1);
+        resultsSimData[k][spectrum[ind]]->SetLineWidth(2);
+        resultsSimData[k][spectrum[ind]]->SetLineColor(799+k*20);
+        resultsSimData[k][spectrum[ind]]->Draw("HIST SAME");
       }
       if(plotMode!=2){
         //plot background
-        resultsBGData[ind]->SetLineStyle(1);
-        resultsBGData[ind]->SetLineWidth(1);
-        resultsBGData[ind]->SetLineColor(920);
-        resultsBGData[ind]->Draw("HIST SAME");
+        resultsBGData[spectrum[ind]]->SetLineStyle(1);
+        resultsBGData[spectrum[ind]]->SetLineWidth(1);
+        resultsBGData[spectrum[ind]]->SetLineColor(920);
+        resultsBGData[spectrum[ind]]->Draw("HIST SAME");
       }
       
     }
