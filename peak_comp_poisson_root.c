@@ -3,8 +3,6 @@
 
 int main(int argc, char *argv[]) {
 
-  
-
   int i = 0;
   int j = 0;
   int k = 0;
@@ -17,23 +15,20 @@ int main(int argc, char *argv[]) {
     exit(-1);
   }
 
-  
-
   // initialize values
   addBackground = 0;
-  for (i = 0; i < NSPECT; i++)
-    for (j = 0; j < S32K; j++) {
+  for(i = 0; i < NSPECT; i++)
+    for(j = 0; j < S32K; j++){
       expHist[i][j] = 0.;
-      for (k = 0; k < NSIMDATA; k++)
-        {
-          simHist[k][i][j] = 0.;
-          scaledSimHist[k][i][j] = 0.;
-        }
+      for (k = 0; k < NSIMDATA; k++){
+        simHist[k][i][j] = 0.;
+        scaledSimHist[k][i][j] = 0.;
+      }
         
     }
 
-  for (i = 0; i < NPAR; i++)
-    for (j = 0; j < NSPECT; j++)
+  for(i = 0; i < NPAR; i++)
+    for(j = 0; j < NSPECT; j++)
       aFinal[i][j] = 0.;
 
   chisq = 0.;
@@ -68,11 +63,11 @@ int main(int argc, char *argv[]) {
     exit(-1);
   }
   const char *dot = strrchr(expDataName, '.'); // get the file extension
-  if (strcmp(dot + 1, "mca") == 0)
+  if(strcmp(dot + 1, "mca") == 0){
     readMCA(expData, expDataName, expHist);
-  else if (strcmp(dot + 1, "fmca") == 0)
+  }else if(strcmp(dot + 1, "fmca") == 0){
     readFMCA(expData, expDataName, expHist);
-  else {
+  }else{
     printf("ERROR: Improper type of input file: %s\n", expDataName);
     printf(
         "Integer array (.mca) and float array (.fmca) files are supported.\n");
@@ -80,28 +75,33 @@ int main(int argc, char *argv[]) {
   }
   fclose(expData);
 
-  for (i = 0; i < NSPECT; i++)
-    for (j = 0; j < S32K; j++)
+  for(i = 0; i < NSPECT; i++)
+    for(j = 0; j < S32K; j++)
       data[i]->Fill(j, expHist[i][j]);
   
   for(i = 0; i < numSimData; i++){
-    if ((simData = fopen(simDataName[i], "r")) == NULL) {
+    if((simData = fopen(simDataName[i], "r")) == NULL){
       printf("ERROR: Cannot open the simulated data file %s!\n", simDataName[i]);
       exit(-1);
     }
     const char *dots = strrchr(simDataName[i], '.'); // get the file extension
-    if (strcmp(dots + 1, "mca") == 0)
+    if(strcmp(dots + 1, "mca") == 0){
       readMCA(simData, simDataName[i], simHist[i]);
-    else if (strcmp(dots + 1, "fmca") == 0)
+    }else if(strcmp(dots + 1, "fmca") == 0){
       readFMCA(simData, simDataName[i], simHist[i]);
-    else {
+    }else{
       printf("ERROR: Improper type of input file: %s\n", simDataName[i]);
-      printf(
-          "Integer array (.mca) and float array (.fmca) files are supported.\n");
+      printf("Integer array (.mca) and float array (.fmca) files are supported.\n");
       exit(-1);
     }
     fclose(simData);
   }
+
+  /*for(i = 0; i < numSpectra; i++)
+    for(j = 0; j < S32K; j++)
+      for(k=0;k<numSimData;k++){
+        printf("sim hist %i sp %i ch %i: %f\n",k,spectrum[i],j,simHist[k][spectrum[i]][j]);
+      }*/
 
   /*// read into ROOT
   for (i = 0; i < numSpectra; i++)
@@ -126,9 +126,7 @@ int main(int argc, char *argv[]) {
   for (i = 0; i < numSpectra; i++)
     for (j = 0; j < S32K; j++){
       if(addBackground == 2){
-        bgHist[spectrum[i]][j] =
-          aFinal[0][i] +
-          aFinal[1][i] * (double)j;
+        bgHist[spectrum[i]][j] = aFinal[0][i] + aFinal[1][i] * (double)j;
       }else if(addBackground == 3){
         bgHist[spectrum[i]][j] = aFinal[0][i];
       }else{
@@ -149,12 +147,12 @@ int main(int argc, char *argv[]) {
 
   //calculate chisq (using likelihood ratio method)
   double yi,ni;
-  for (i = 0; i < numSpectra; i++)
-    for (j = startCh[i]; j <= endCh[i]; j++){
+  for(i = 0; i < numSpectra; i++)
+    for(j = startCh[i]; j <= endCh[i]; j++){
       ni = (double)expHist[spectrum[i]][j];
       yi = resultsHist[spectrum[i]][j];
       // evaluate chisq given input parameters
-      if ((ni > 0.)&&(yi != 0.))
+      if((ni > 0.)&&(yi != 0.))
         chisq += (yi - ni + ni * log(ni / yi));
       else
         chisq += yi; // the log(0) case
@@ -170,22 +168,22 @@ int main(int argc, char *argv[]) {
 
   // write results
   sprintf(str, "fit_poisson.fmca");
-  if ((results = fopen(str, "w")) == NULL) {
+  if((results = fopen(str, "w")) == NULL){
     printf("ERROR: Cannot open the output file %s!\n", str);
     exit(-1);
   }
-  for (i = 0; i < numSpectra; i++) {
+  for(i = 0; i < numSpectra; i++){
     fwrite(resultsHist[spectrum[i]], S32K * sizeof(float), 1, results);
   }
   fclose(results);
 
   // save scaling factors
   sprintf(str, "scalingFactors.dat");
-  if ((scalingFactors = fopen(str, "w")) == NULL) {
+  if((scalingFactors = fopen(str, "w")) == NULL){
     printf("ERROR: Cannot open the output file %s!\n", str);
     exit(-1);
   }
-  for (i = 0; i < numSpectra; i++) {
+  for(i = 0; i < numSpectra; i++){
     fprintf(scalingFactors, "%d %.9f\n", i + 1, aFinal[0][i]);
   }
   fclose(scalingFactors);
@@ -198,7 +196,7 @@ int main(int argc, char *argv[]) {
   
 
   // plot results
-  if (plotMode >= 0){
+  if(plotMode >= 0){
     theApp=new TApplication("App", &argc, argv);
     plotSpectra();
   }
@@ -215,26 +213,24 @@ double lrchisq(const double *par) {
   int i = 0;
   int j = 0;
 
-  for (i = startCh[spCurrent]; i <= endCh[spCurrent]; i++) {
+  for(i = startCh[spCurrent]; i <= endCh[spCurrent]; i++){
     ni = expCurrent[i]; // events in ith bin
 
     // calculate model in the ith bin
     yi=0;
-    for(j=0; j<numSimData; j++)
-      {
-        
-        if((j>=1)&&(useRelIntensities)&&(relIntensityAvailable[j])){
-          yi += par[2]*par[j+2] * simCurrent[j][i]; //amplitude relative to the 1st ampliutude
-        }else{
-          yi += par[j+2] * simCurrent[j][i];
-        }
-        
-        
+    for(j=0; j<numSimData; j++){
+      
+      if((j>=1)&&(useRelIntensities)&&(relIntensityAvailable[j])){
+        yi += par[2]*par[j+2] * simCurrent[j][i]; //amplitude relative to the 1st ampliutude
+      }else{
+        yi += par[j+2] * simCurrent[j][i];
       }
+      
+    }
     // add background if neccesary
-    if (addBackground == 2){
+    if(addBackground == 2){
       yi += par[0] + par[1] * (double)i;
-    }else if (addBackground == 3){
+    }else if(addBackground == 3){
       yi += par[0];
     }
 
@@ -244,7 +240,7 @@ double lrchisq(const double *par) {
     }
 
     // evaluate chisq given input parameters
-    if ((ni > 0.)&&(yi != 0.))
+    if((ni > 0.)&&(yi != 0.))
       lrchisq += (yi - ni + ni * log(ni / yi));
     else
       lrchisq += yi; // the log(0) case
@@ -266,7 +262,7 @@ void find_chisqMin() {
   if(verbosity>0)
     printf("Fitting data...\n");
 
-  for (i = 0; i < numSpectra; i++) {
+  for(i = 0; i < numSpectra; i++){
     if(verbosity>0)
       printf("-Spectrum %i-\n",i+1);
     // for more information see minimizer class documentation
@@ -287,23 +283,26 @@ void find_chisqMin() {
 
     // communication to the likelihood ratio function
     // (via global parameters)
-    for (j = 0; j < S32K; j++) {
+    for(j = 0; j < S32K; j++){
       expCurrent[j] = (double)expHist[spectrum[i]][j];
     }
-    for (j = 0; j < S32K; j++) {
-      for (k=0;k<numSimData;k++)
+    for(j = 0; j < S32K; j++){
+      for(k=0;k<numSimData;k++)
         simCurrent[k][j] = (double)simHist[k][spectrum[i]][j];
     }
-    spCurrent = i;
+    spCurrent = i; //needed for fit
 
     //calculate integrals
     intSim=0.;
     intExp=0.;
-    for (j = startCh[spCurrent]; j <= endCh[spCurrent]; j++){
-      for (k=0;k<numSimData;k++)
-        intSim += (double)simHist[k][spectrum[i]][j];
+    for(j = startCh[i]; j <= endCh[i]; j++){
+      for(k=0;k<numSimData;k++){
+        intSim += simCurrent[k][j];
+        //printf("ch %i sim val: %f\n",j,simCurrent[k][j]);
+      }
       intExp += (double)expHist[spectrum[i]][j]; 
     }
+    //printf("intExp: %f, intSim: %f\n",intExp,intSim);
 
     // create function wrapper for minmizer
     // a IMultiGenFunction type
@@ -319,6 +318,7 @@ void find_chisqMin() {
     for (j=0;j<2+numSimData;j++){
       variable[j] = ratio/2.;
       step[j] = ratio/100.;
+      //printf("Variable %i: val %f, step %f\n",j,variable[j],step[j]);
     }
     variable[1]/=100000.; //slope for linear background is usually very small
 
@@ -350,7 +350,7 @@ void find_chisqMin() {
 
     // assuming 3 parameters
     // save pars
-    for (j = 0; j < 2+numSimData; j++){
+    for(j = 0; j < 2+numSimData; j++){
       if((j>=3)&&(useRelIntensities)&&(relIntensityAvailable[j-2])){
         aFinal[j][i] = xs[j]*xs[2]; //intensity relative to first intensity
       }else{
@@ -361,10 +361,9 @@ void find_chisqMin() {
 
     //print amplitudes
     if(verbosity>0){
-      for (j = 2; j < 2+numSimData; j++){
+      for(j = 2; j < 2+numSimData; j++){
         printf("Spectrum %i, amplitude %i: %f\n",i+1,j-1,aFinal[j][i]);
       }
-        
     }
 
   }
@@ -486,32 +485,37 @@ void plotSpectra() {
   theApp->Run(kTRUE);
 }
 
-int readMCA(FILE *inp, char *filename, float inpHist[NSPECT][S32K]) {
-  int i = 0;
-  int j = 0;
-
+int readMCA(FILE *inp, char *filename, float inpHist[NSPECT][S32K]){
+  
+  if(verbosity>0)
+    printf("Reading %i spectra in MCA file: %s\n",endSpectrum,filename);
+  
   int mcaHist[NSPECT][S32K];
-  for (i = 0; i <= endSpectrum; i++)
-    if (fread(mcaHist[i], S32K * sizeof(int), 1, inp) != 1) {
+  for(int i = 0; i <= endSpectrum; i++){
+    if(fread(mcaHist[i], S32K * sizeof(int), 1, inp) != 1) {
       printf("ERROR: Error reading file %s!\n", filename);
       exit(-1);
     }
+  }
 
-  for (i = 0; i < NSPECT; i++)
-    for (j = 0; j < S32K; j++)
+  for(int i = 0; i < NSPECT; i++)
+    for(int j = 0; j < S32K; j++)
       inpHist[i][j] = (float)mcaHist[i][j];
 
   return 1;
 }
 
-int readFMCA(FILE *inp, char *filename, float inpHist[NSPECT][S32K]) {
-  int i = 0;
+int readFMCA(FILE *inp, char *filename, float inpHist[NSPECT][S32K]){
 
-  for (i = 0; i <= endSpectrum; i++)
-    if (fread(inpHist[i], S32K * sizeof(float), 1, inp) != 1) {
+  if(verbosity>0)
+    printf("Reading %i spectra in FMCA file: %s\n",endSpectrum,filename);
+
+  for(int i = 0; i <= endSpectrum; i++){
+    if(fread(inpHist[i], S32K * sizeof(float), 1, inp) != 1){
       printf("ERROR: Error reading file %s!\n", filename);
       exit(-1);
     }
+  }
 
   return 1;
 }

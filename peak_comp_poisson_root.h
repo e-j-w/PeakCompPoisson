@@ -17,7 +17,7 @@
 #include "Math/Factory.h"
 #include "Math/Functor.h"
 
-#define S32K        32768
+#define S32K        32768 //2^15
 #define NPAR        20
 #define NSPECT      16
 #define NSIMDATA    16
