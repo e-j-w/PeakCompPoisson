@@ -19,7 +19,7 @@
 
 #define S32K        32768 //2^15
 #define NPAR        20
-#define NSPECT      16
+#define NSPECT      32
 #define NSIMDATA    16
 
 //forward declarations

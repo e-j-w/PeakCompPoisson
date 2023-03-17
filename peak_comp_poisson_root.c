@@ -36,11 +36,11 @@ int main(int argc, char *argv[]) {
   // initialize ROOT stuff
   char simName[132];
   char dataName[132];
-  for (i = 0; i < NSPECT; i++) {
+  for(i = 0; i < NSPECT; i++){
     sprintf(simName, "sim_%2d", i);
     sim[i] = new TH1D(simName, ";;", S32K, 0, S32K - 1);
   }
-  for (i = 0; i < NSPECT; i++) {
+  for(i = 0; i < NSPECT; i++){
     sprintf(dataName, "data_%2d", i);
     data[i] = new TH1D(dataName, ";;", S32K, 0, S32K - 1);
   }
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
   readConfigFile(argv[1]); // grab data from the config file
 
   // check that the number of spectra being compared is fine
-  if (endSpectrum >= NSPECT) {
+  if(numSpectra >= NSPECT) {
     printf("ERROR: A spectrum number specified in the parameter file is larger "
            "than the maximum value of %i.  Reduce it or increase NSPECT in "
            "peak_comp.h and recompile.\n",
