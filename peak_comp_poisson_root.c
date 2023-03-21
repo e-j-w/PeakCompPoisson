@@ -393,8 +393,8 @@ void plotSpectra() {
     
   }
   // be careful with indicies here
-  for (i = 0; i < numSpectra; i++)
-    for (j = 0; j < S32K; j++){
+  for(i = 0; i < numSpectra; i++){
+    for(j = 0; j < S32K; j++){
       results[spectrum[i]]->Fill(j, resultsHist[spectrum[i]][j]);
       if(plotMode>=1){
         resultsBGData[spectrum[i]]->Fill(j, bgHist[spectrum[i]][j]);
@@ -402,6 +402,7 @@ void plotSpectra() {
           resultsSimData[k][spectrum[i]]->Fill(j, scaledSimHist[k][spectrum[i]][j]);
       }
     }
+  }
 
   // display limits
   Double_t low[NSPECT], high[NSPECT];
@@ -421,7 +422,7 @@ void plotSpectra() {
   }
 
   // plot
-  for (i = 1; i <= numSpectra; i++) {
+  for(i = 1; i <= numSpectra; i++){
     c->cd(i);
     Int_t ind = i - 1;
     // data in black
@@ -465,7 +466,7 @@ void plotSpectra() {
   else
     leg = new TLegend(0.70, 0.85, 0.90, 0.95);
   leg->AddEntry(data[0], "Experiment", "l");
-  leg->AddEntry(results[0], "Simulation", "l");
+  leg->AddEntry(results[spectrum[0]], "Simulation", "l");
   if(plotMode>=1){
     for(k=0;k<numSimData;k++){
       sprintf(resultsName, "Branch %i", k+1);
