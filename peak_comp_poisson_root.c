@@ -327,7 +327,7 @@ void find_chisqMin() {
     // Set pars for minimization
     for (j=0;j<2+numSimData;j++){
       sprintf(str, "a%i", j);
-      if((j>=3)&&(useRelIntensities))
+      if((j>=3)&&(useRelIntensities)&&(ril[j-2]!=rih[j-2]))
         min->SetLimitedVariable(j, str, variable[j], step[j],ril[j-2],rih[j-2]); //set relative intensity
       else if((j>=2)&&(forcePosAmp==1))
         min->SetLimitedVariable(j, str, variable[j], step[j],0.0,5.0*ratio); //j>=2 for amplitudes
@@ -384,7 +384,7 @@ void plotSpectra() {
     results[i] = new TH1D(resultsName, ";;", S32K, 0, S32K - 1);
     if(plotMode>=1){
       sprintf(resultsBGName, "resultsBG_%2d", i);
-      resultsBGData[i] = new TH1D(resultsName, ";;", S32K, 0, S32K - 1);
+      resultsBGData[i] = new TH1D(resultsBGName, ";;", S32K, 0, S32K - 1);
       for(k=0;k<numSimData;k++){
         sprintf(resultsSimDataName, "resultsSimData_%2d_%2d", i, k);
         resultsSimData[k][i] = new TH1D(resultsSimDataName, ";;", S32K, 0, S32K - 1);

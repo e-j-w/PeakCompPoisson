@@ -20,83 +20,83 @@ void readConfigFile(const char *fileName) {
   endSpectrum = 0;
   maxNumCh = 0;
   numSimData = 0;
-  if ((config = fopen(fileName, "r")) == NULL) {
+  if((config = fopen(fileName, "r")) == NULL){
     printf("ERROR: Cannot open the config file %s!\n", fileName);
     exit(-1);
   }
   while (!(feof(config))) // go until the end of file is reached
   {
-    if (fgets(str, 256, config) != NULL) {
-      if (index < NSPECT)
+    if(fgets(str, 256, config) != NULL){
+      if(index < NSPECT)
         // spectrum, channel range and step function parameter data
-        if (sscanf(str, "%i %i %i", &spectrum[index], &startCh[index], &endCh[index]) == 3) {
-          if (spectrum[index] > endSpectrum)
+        if(sscanf(str, "%i %i %i", &spectrum[index], &startCh[index], &endCh[index]) == 3){
+          if(spectrum[index] > endSpectrum)
             endSpectrum = spectrum[index];
-          if ((endCh[index] - startCh[index] + 1) > maxNumCh)
+          if((endCh[index] - startCh[index] + 1) > maxNumCh)
             maxNumCh = endCh[index] - startCh[index] + 1;
           index++;
           numSpectra++;
         }
       
       //simulated data parameters
-      if(sscanf(str, "%s %s %lf %lf", str1, str2, &ril[numSimData], &rih[numSimData]) == 4)
-      {
-        if (strcmp(str1, "SIMULATED_DATA") == 0){
-          if(numSimData<NSIMDATA)
-            {
-              if((verbosity>0)&&(numSimData>0))
-                printf("Relative intensities provided for simulated data %i.\n",numSimData+1);
-              strcpy(simDataName[numSimData], str2);
-              relIntensityAvailable[numSimData]=1;
-              numSimData++;
-            }
+      if(sscanf(str, "%s %s %lf %lf", str1, str2, &ril[numSimData], &rih[numSimData]) == 4){
+        if(strcmp(str1, "SIMULATED_DATA") == 0){
+          if(numSimData == 0){
+            printf("ERROR: cannot set relative intensities for the first simulated dataset (%s).\n",str2);
+            printf("Intensities should only be specified for later datasets, relative to the first dataset.\n");
+            exit(-1);
+          }
+          if(numSimData<NSIMDATA){
+            if((verbosity>0)&&(numSimData>0))
+              printf("Relative intensities provided for simulated data %i.\n",numSimData+1);
+            strcpy(simDataName[numSimData], str2);
+            relIntensityAvailable[numSimData]=1;
+            numSimData++;
+          }
         }
-      }else if (sscanf(str, "%s %s", str1, str2) == 2)
-      {
+      }else if (sscanf(str, "%s %s", str1, str2) == 2){
         if (strcmp(str1, "SIMULATED_DATA") == 0){
-          if(numSimData<NSIMDATA)
-            {
-              if((verbosity>0)&&(numSimData>0))
-                printf("Relative intensities not provided for simulated data %i.\n",numSimData+1);
-              strcpy(simDataName[numSimData], str2);  
-              relIntensityAvailable[numSimData]=0;
-              numSimData++;
-            }
+          if(numSimData<NSIMDATA){
+            if((verbosity>0)&&(numSimData>0))
+              printf("Relative intensities not provided for simulated data %i.\n",numSimData+1);
+            strcpy(simDataName[numSimData], str2);
+            relIntensityAvailable[numSimData]=0;
+            numSimData++;
+          }
         }
       }
 
-      if (sscanf(str, "%s %s", str1, str2) == 2) // single parameter data
-      {
-        if (strcmp(str1, "EXPERIMENT_DATA") == 0)
+      if(sscanf(str, "%s %s", str1, str2) == 2){ // single parameter data
+        if(strcmp(str1, "EXPERIMENT_DATA") == 0)
           strcpy(expDataName, str2);
         
-        if (strcmp(str1, "ADD_BACKGROUND") == 0) {
-          if (strcmp(str2, "lin") == 0)
+        if(strcmp(str1, "ADD_BACKGROUND") == 0){
+          if(strcmp(str2, "lin") == 0)
             addBackground = 2; //linear
           else if (strcmp(str2, "const") == 0)
             addBackground = 3; //constant
           else
             addBackground = 0;
         }
-        if (strcmp(str1, "FORCE_POSITIVE_AMPLITUDE") == 0) {
-          if (strcmp(str2, "yes") == 0)
+        if(strcmp(str1, "FORCE_POSITIVE_AMPLITUDE") == 0){
+          if(strcmp(str2, "yes") == 0)
             forcePosAmp = 1;
           else
             forcePosAmp = 0;
         }
-        if (strcmp(str1, "FORCE_NEGATIVE_SLOPE_BACKGROUND") == 0) {
-          if (strcmp(str2, "yes") == 0)
+        if(strcmp(str1, "FORCE_NEGATIVE_SLOPE_BACKGROUND") == 0){
+          if(strcmp(str2, "yes") == 0)
             forceNegSlopeBG = 1;
           else
             forceNegSlopeBG = 0;
         }
-        if (strcmp(str1, "USE_RELATIVE_INTENSITIES") == 0) {
-          if (strcmp(str2, "yes") == 0)
+        if(strcmp(str1, "USE_RELATIVE_INTENSITIES") == 0){
+          if(strcmp(str2, "yes") == 0)
             useRelIntensities = 1;
           else
             useRelIntensities = 0;
         }
-        if ((strcmp(str1, "PLOT_MODE") == 0)||(strcmp(str1, "PLOT_OUTPUT") == 0)) {
+        if((strcmp(str1, "PLOT_MODE") == 0)||(strcmp(str1, "PLOT_OUTPUT") == 0)){
           if (strcmp(str2, "yes") == 0)
             plotMode = 0;
           else if (strcmp(str2, "detailed") == 0)
@@ -106,7 +106,7 @@ void readConfigFile(const char *fileName) {
           else
             plotMode = -1;
         }
-        if (strcmp(str1, "VERBOSE") == 0) {
+        if(strcmp(str1, "VERBOSE") == 0){
           if (strcmp(str2, "yes") == 0)
             verbosity = 1;
           else if (strcmp(str2, "debug") == 0)
@@ -114,23 +114,22 @@ void readConfigFile(const char *fileName) {
           else
             verbosity = 0;
         }
-        if (strcmp(str1, "SAVE_RESULTS") == 0) {
+        if(strcmp(str1, "SAVE_RESULTS") == 0){
           if (strcmp(str2, "yes") == 0)
             saveResults = 1;
           else
             saveResults = 0;
         }
-        if (strcmp(str1, "SAVE_BACKGROUND") == 0) {
+        if(strcmp(str1, "SAVE_BACKGROUND") == 0){
           if (strcmp(str2, "yes") == 0)
             saveBG = 1;
           else
             saveBG = 0;
         }
-        if (strcmp(str1, "BACKGROUND_DATA_NAME") == 0)
+        if(strcmp(str1, "BACKGROUND_DATA_NAME") == 0)
           strcpy(bgDataName, str2);
       }
-      if(sscanf(str, "%s %s", str1, str2) == 1) // listing of simulated data
-      {
+      if(sscanf(str, "%s %s", str1, str2) == 1){ // listing of simulated data
         if(strcmp(str1, "<---END_OF_PARAMETERS--->") == 0)
           break;
       }
