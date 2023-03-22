@@ -8,11 +8,9 @@ int forceNegSlopeBG; //0=no, 1=yes
 int useRelIntensities; //0=no, 1=yes
 int relIntensityAvailable[NSIMDATA]; //0=no, 1=yes
 int plotMode;      // 0 = normal, 1=detailed
-int saveBG;        // 0=no, 1=yes
-int saveResults;   // 0=no, 1=yes
-char expDataName[256], simDataName[NSIMDATA][256],
-    resultsDataName[256], bgDataName[256]; // file names
-char str[256], str1[256], str2[256], str3[256];
+int saveResults;        // 0=no, 1=yes
+char expDataName[256], simDataName[NSIMDATA][256]; // file names
+char str[256], str1[256], str2[256];
 
 void readConfigFile(const char *fileName) {
   int index = 0;
@@ -20,6 +18,7 @@ void readConfigFile(const char *fileName) {
   endSpectrum = 0;
   maxNumCh = 0;
   numSimData = 0;
+  saveResults = 0;
   if((config = fopen(fileName, "r")) == NULL){
     printf("ERROR: Cannot open the config file %s!\n", fileName);
     exit(-1);
@@ -122,14 +121,6 @@ void readConfigFile(const char *fileName) {
           else
             saveResults = 0;
         }
-        if(strcmp(str1, "SAVE_BACKGROUND") == 0){
-          if (strcmp(str2, "yes") == 0)
-            saveBG = 1;
-          else
-            saveBG = 0;
-        }
-        if(strcmp(str1, "BACKGROUND_DATA_NAME") == 0)
-          strcpy(bgDataName, str2);
       }
       if(sscanf(str, "%s %s", str1, str2) == 1){ // listing of simulated data
         if(strcmp(str1, "<---END_OF_PARAMETERS--->") == 0)
@@ -170,8 +161,6 @@ void readConfigFile(const char *fileName) {
       printf("Will plot detailed output data.\n");
     if(saveResults == 1)
       printf("Saving scaled fit results.\n");
-    if(saveBG == 1)
-      printf("Will save fit background to file %s\n", bgDataName);
     printf("Finished reading parameter file...\n");
   }
   

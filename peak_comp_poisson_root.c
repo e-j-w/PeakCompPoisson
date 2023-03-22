@@ -169,33 +169,34 @@ int main(int argc, char *argv[]){
     printf("%.15f\n", chisq);
 
   // write results
-  sprintf(str, "fit_poisson.fmca");
-  if((results = fopen(str, "w")) == NULL){
-    printf("ERROR: Cannot open the output file %s!\n", str);
-    exit(-1);
-  }
-  for(i = 0; i < numSpectra; i++){
-    fwrite(resultsHist[spectrum[i]], S32K * sizeof(float), 1, results);
-  }
-  fclose(results);
+  if(saveResults == 1){
+    //write spectra
+    sprintf(str, "fit_poisson.fmca");
+    if((results = fopen(str, "w")) == NULL){
+      printf("ERROR: Cannot open the output file %s!\n", str);
+      exit(-1);
+    }
+    for(i = 0; i < numSpectra; i++){
+      fwrite(resultsHist[spectrum[i]], S32K * sizeof(float), 1, results);
+    }
+    fclose(results);
 
-  // save scaling factors
-  sprintf(str, "scalingFactors.dat");
-  if((scalingFactors = fopen(str, "w")) == NULL){
-    printf("ERROR: Cannot open the output file %s!\n", str);
-    exit(-1);
+    //save scaling factors
+    sprintf(str, "scalingFactors.dat");
+    if((scalingFactors = fopen(str, "w")) == NULL){
+      printf("ERROR: Cannot open the output file %s!\n", str);
+      exit(-1);
+    }
+    for(i = 0; i < numSpectra; i++){
+      fprintf(scalingFactors, "%d %.9f\n", i + 1, aFinal[0][i]);
+    }
+    fclose(scalingFactors);
   }
-  for(i = 0; i < numSpectra; i++){
-    fprintf(scalingFactors, "%d %.9f\n", i + 1, aFinal[0][i]);
-  }
-  fclose(scalingFactors);
 
   /*printf("Scaling factors:\n");
   for(i = 0; i < numSpectra; i++){
     printf("%d %.9f\n", i + 1, aFinal[0][i]);
   }*/
-
-  
 
   // plot results
   if(plotMode >= 0){

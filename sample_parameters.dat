@@ -36,6 +36,10 @@ const: Add a constant background to the simulated data.
 lin: Add a linear background to the simulated data.
 quad: Add a quadratic background to the simulated data.
 
+FORCE_NEGATIVE_SLOPE_BACKGROUND
+yes: Force the background term to decrease (or stay constant) with increasing energy.
+no: Leave background parameters free.
+
 PLOT_OUTPUT
 no: Show chisq stats only.
 yes: Show a plot of the simulated and experimental data alongside chisq stats.
@@ -47,9 +51,9 @@ no: Only print the fit chisq value (useful for interfacing with bash scripts).
 yes: Print the results of reading in the parameter file and fitting.
 debug: Print the above plus debug info.
 
-SAVE_STATS
-no: Do not save stats.
-yes: Save chi-square and Bhattacharyya statistical analysis to a file.
+SAVE_RESULTS
+no: Do not save fit results.
+yes: Save fit results to a file (fit_poisson.fmca) alongside scaling factors (scalingFactors.dat).
 
 STATS_DATA_NAME
 Path to .dat file containing the stats information. Column 1 is spectrum #, column 2 is chi-square, column 3 is Bhattacharyya.
