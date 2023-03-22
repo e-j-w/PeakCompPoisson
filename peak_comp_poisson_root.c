@@ -17,19 +17,21 @@ int main(int argc, char *argv[]){
 
   // initialize values
   addBackground = 0;
-  for(i = 0; i < NSPECT; i++)
+  for(i = 0; i < NSPECT; i++){
     for(j = 0; j < S32K; j++){
       expHist[i][j] = 0.;
       for(k = 0; k < NSIMDATA; k++){
         simHist[k][i][j] = 0.;
         scaledSimHist[k][i][j] = 0.;
       }
-        
     }
+  }
 
-  for(i = 0; i < NPAR; i++)
-    for(j = 0; j < NSPECT; j++)
+  for(i = 0; i < NPAR; i++){
+    for(j = 0; j < NSPECT; j++){
       aFinal[i][j] = 0.;
+    }
+  }
 
   chisq = 0.;
 
@@ -75,9 +77,11 @@ int main(int argc, char *argv[]){
   }
   fclose(expData);
 
-  for(i = 0; i < NSPECT; i++)
-    for(j = 0; j < S32K; j++)
+  for(i = 0; i < NSPECT; i++){
+    for(j = 0; j < S32K; j++){
       data[i]->Fill(j, expHist[i][j]);
+    }
+  }
   
   for(i = 0; i < numSimData; i++){
     if((simData = fopen(simDataName[i], "r")) == NULL){
@@ -108,22 +112,24 @@ int main(int argc, char *argv[]){
     for(j = 0; j < S32K; j++)
       sim[i]->Fill(j, simHist[0][i][j]);*/
 
-  if(verbosity>0)
+  if(verbosity>0){
     printf("Spectra read in...\n");
-
+  }
   
   find_chisqMin();
 
   // scale simulated data
-  for(i = 0; i < numSpectra; i++)
-    for(j = 0; j < S32K; j++)
+  for(i = 0; i < numSpectra; i++){
+    for(j = 0; j < S32K; j++){
       for(k=0;k<numSimData;k++){
         scaledSimHist[k][spectrum[i]][j]=0.;
         scaledSimHist[k][spectrum[i]][j] += aFinal[k+3][i] * simHist[k][spectrum[i]][j];
       }
+    }
+  }
 
   // add background to simulated data
-  for(i = 0; i < numSpectra; i++)
+  for(i = 0; i < numSpectra; i++){
     for(j = 0; j < S32K; j++){
       if(addBackground == 1){
         bgHist[spectrum[i]][j] = aFinal[0][i] + aFinal[1][i]*(double)j + aFinal[2][i]*(double)j*(double)j;
@@ -134,39 +140,41 @@ int main(int argc, char *argv[]){
       }else{
         bgHist[spectrum[i]][j] = 0.;
       }
-      
     }
-      
+  }
 
   // fit result histogram
-  for(i = 0; i < numSpectra; i++)
-    for(j = 0; j < S32K; j++)
-      {
-        resultsHist[spectrum[i]][j] = bgHist[spectrum[i]][j];
-        for(k=0;k<numSimData;k++)
-          resultsHist[spectrum[i]][j] += (float)scaledSimHist[k][spectrum[i]][j];
+  for(i = 0; i < numSpectra; i++){
+    for(j = 0; j < S32K; j++){
+      resultsHist[spectrum[i]][j] = bgHist[spectrum[i]][j];
+      for(k=0;k<numSimData;k++){
+        resultsHist[spectrum[i]][j] += (float)scaledSimHist[k][spectrum[i]][j];
       }
+    }
+  }
 
   //calculate chisq (using likelihood ratio method)
   double yi,ni;
-  for(i = 0; i < numSpectra; i++)
+  for(i = 0; i < numSpectra; i++){
     for(j = startCh[i]; j <= endCh[i]; j++){
       ni = (double)expHist[spectrum[i]][j];
       yi = resultsHist[spectrum[i]][j];
       // evaluate chisq given input parameters
-      if((ni > 0.)&&(yi != 0.))
+      if((ni > 0.)&&(yi != 0.)){
         chisq += (yi - ni + ni * log(ni / yi));
-      else
+      }else{
         chisq += yi; // the log(0) case
-      
+      }
     }
+  }
   chisq *= 2.;
 
   // print output
-  if(verbosity>0)
+  if(verbosity>0){
     printf("Fit chisq: %.15f\n", chisq);
-  else
+  }else{
     printf("%.15f\n", chisq);
+  }
 
   // write results
   if(saveResults == 1){
@@ -200,7 +208,7 @@ int main(int argc, char *argv[]){
 
   // plot results
   if(plotMode >= 0){
-    theApp=new TApplication("App", &argc, argv);
+    theApp = new TApplication("App", &argc, argv);
     plotSpectra();
   }
 
@@ -245,10 +253,11 @@ double lrchisq(const double *par){
     }
 
     // evaluate chisq given input parameters
-    if((ni > 0.)&&(yi != 0.))
+    if((ni > 0.)&&(yi != 0.)){
       lrchisq += (yi - ni + ni * log(ni / yi));
-    else
+    }else{
       lrchisq += yi; // the log(0) case
+    }
   }
   lrchisq *= 2.;
 
@@ -268,23 +277,24 @@ void find_chisqMin(){
     printf("Fitting data...\n");
 
   for(i = 0; i < numSpectra; i++){
-    if(verbosity>0)
+    if(verbosity>0){
       printf("-Spectrum %i-\n",i+1);
+    }
     // for more information see minimizer class documentation
     // https://root.cern.ch/root/html/ROOT__Math__Minimizer.html
     char minName[132] = "Minuit";
     char algoName[132] = ""; // default (Migard for Minuit)
-    ROOT::Math::Minimizer *min =
-        ROOT::Math::Factory::CreateMinimizer(minName, algoName);
+    ROOT::Math::Minimizer *min = ROOT::Math::Factory::CreateMinimizer(minName, algoName);
 
     // set tolerance , etc...
     min->SetMaxFunctionCalls(10000000); // for Minuit
     min->SetMaxIterations(100000);
     min->SetTolerance(0.001);
-    if(verbosity>1)
+    if(verbosity>1){
       min->SetPrintLevel(1);
-    else
+    }else{
       min->SetPrintLevel(0); // set to 1 for more info
+    }
 
     // communication to the likelihood ratio function
     // (via global parameters)
@@ -333,14 +343,15 @@ void find_chisqMin(){
     // Set pars for minimization
     for(j=0;j<3+numSimData;j++){
       sprintf(str, "a%i", j);
-      if((j>=4)&&(useRelIntensities)&&(ril[j-3]!=rih[j-3]))
+      if((j>=4)&&(useRelIntensities)&&(ril[j-3]!=rih[j-3])){
         min->SetLimitedVariable(j, str, variable[j], step[j],ril[j-3],rih[j-3]); //set relative intensity
-      else if((j>=3)&&(forcePosAmp==1))
+      }else if((j>=3)&&(forcePosAmp==1)){
         min->SetLimitedVariable(j, str, variable[j], step[j],0.0,5.0*ratio); //j>=2 for amplitudes
-      else if((j==1)&&(forceNegSlopeBG==1))
+      }else if((j==1)&&(forceNegSlopeBG==1)){
         min->SetLimitedVariable(j, str, -1.0*variable[j], step[j]/100., -1000.0, 0.0); //slope not allowed to be positive
-      else
+      }else{
         min->SetVariable(j, str, variable[j], step[j]);
+      }
       //printf("Variable %i initialized to %f, step size %f",j,variable[j], step[j]);
       //printf(".\n");
     }
@@ -363,7 +374,6 @@ void find_chisqMin(){
         aFinal[j][i] = xs[j];
       }
     }
-      
 
     //print amplitudes
     if(verbosity>0){
@@ -467,10 +477,11 @@ void plotSpectra(){
   c->cd(1);
   // x1,y1,x2,y2
   TLegend *leg;
-  if(plotMode>=1)
+  if(plotMode>=1){
     leg = new TLegend(0.70, 0.85 - numSimData*0.05, 0.90, 0.95);
-  else
+  }else{
     leg = new TLegend(0.70, 0.85, 0.90, 0.95);
+  }
   leg->AddEntry(data[0], "Experiment", "l");
   leg->AddEntry(results[spectrum[0]], "Simulation", "l");
   if(plotMode>=1){
@@ -478,7 +489,6 @@ void plotSpectra(){
       sprintf(resultsName, "Branch %i", k+1);
       leg->AddEntry(resultsSimData[k][spectrum[k+1]], resultsName, "l");
     }
-    
   }
   leg->SetFillColor(0);
   leg->SetFillStyle(0);
@@ -494,8 +504,9 @@ void plotSpectra(){
 
 int readMCA(FILE *inp, char *filename, float inpHist[NSPECT][S32K]){
   
-  if(verbosity>0)
+  if(verbosity>0){
     printf("Reading %i spectra in MCA file: %s\n",endSpectrum,filename);
+  }
   
   int mcaHist[NSPECT][S32K];
   for(int i = 0; i <= endSpectrum; i++){
@@ -505,17 +516,20 @@ int readMCA(FILE *inp, char *filename, float inpHist[NSPECT][S32K]){
     }
   }
 
-  for(int i = 0; i < NSPECT; i++)
-    for(int j = 0; j < S32K; j++)
+  for(int i = 0; i < NSPECT; i++){
+    for(int j = 0; j < S32K; j++){
       inpHist[i][j] = (float)mcaHist[i][j];
+    }
+  }
 
   return 1;
 }
 
 int readFMCA(FILE *inp, char *filename, float inpHist[NSPECT][S32K]){
 
-  if(verbosity>0)
+  if(verbosity>0){
     printf("Reading %i spectra in FMCA file: %s\n",endSpectrum,filename);
+  }
 
   for(int i = 0; i <= endSpectrum; i++){
     if(fread(inpHist[i], S32K * sizeof(float), 1, inp) != 1){

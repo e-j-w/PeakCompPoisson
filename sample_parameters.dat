@@ -5,7 +5,7 @@ USE_RELATIVE_INTENSITIES    yes
 PLOT_OUTPUT                 no
 VERBOSE                     no
 
-SIMULATED_DATA              ../4969/10/sim_5keVch_biased.mca 1 1
+SIMULATED_DATA              ../4969/10/sim_5keVch_biased.mca
 SIMULATED_DATA              ../4969_6739feeding/10/sim_5keVch_biased.mca 0.158906936183264 0.214985815679432
 SIMULATED_DATA              ../4969_7621feeding/10/sim_5keVch_biased.mca 0.121194526670479	0.224866235588867
 
@@ -55,15 +55,14 @@ SAVE_RESULTS
 no: Do not save fit results.
 yes: Save fit results to a file (fit_poisson.fmca) alongside scaling factors (scalingFactors.dat).
 
-STATS_DATA_NAME
-Path to .dat file containing the stats information. Column 1 is spectrum #, column 2 is chi-square, column 3 is Bhattacharyya.
-
 SIMULATED_DATA
 Contains the path(s) to the .mca or .fmca file(s) containing simulated data.
 Multiple datasets may be specified, each on a separate line.
 Two numbers can be specified after the filename, corresponding 
 to low and high limits for the relative intensity of that data,
-relative to any other datasets specified.
+relative to any other datasets specified.  Note: Intensity limits are 
+only valid for the second and later files, the first file will be assumed
+to have relative intensity 1.
 
 SPECTRUM  START_CHANNEL END_CHANNEL
 Contains a list of the spectra to analyze in the experiment and simulated data, along with the channel range to analyze.  Multiple spectra may be specified, each on a separate line.

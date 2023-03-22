@@ -1,5 +1,6 @@
 FILE *config;
-int spectrum[NSPECT], startCh[NSPECT], endCh[NSPECT], numSpectra, endSpectrum, maxNumCh, numSimData;
+int spectrum[NSPECT], startCh[NSPECT], endCh[NSPECT];
+int numSpectra, endSpectrum, maxNumCh, numSimData;
 double ril[NSIMDATA], rih[NSIMDATA];
 int addBackground; // 0=no, 1=constant background
 int plotOutput;    // 0=no, 1=yes, 2=detailed
