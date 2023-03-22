@@ -28,12 +28,13 @@ format of the file, prepare for unforeseen consequences.
 Valid parameters and their descriptions follow:
 
 EXPERIMENT_DATA
-Contains the path to the .mca file containing experiment data.
+Contains the path to the .mca or .fmca file containing experiment data.
 
 ADD_BACKGROUND
 no: Don't add any background.
 const: Add a constant background to the simulated data.
 lin: Add a linear background to the simulated data.
+quad: Add a quadratic background to the simulated data.
 
 PLOT_OUTPUT
 no: Show chisq stats only.
@@ -54,7 +55,7 @@ STATS_DATA_NAME
 Path to .dat file containing the stats information. Column 1 is spectrum #, column 2 is chi-square, column 3 is Bhattacharyya.
 
 SIMULATED_DATA
-Contains the path(s) to the .mca file(s) containing simulated data.
+Contains the path(s) to the .mca or .fmca file(s) containing simulated data.
 Multiple datasets may be specified, each on a separate line.
 Two numbers can be specified after the filename, corresponding 
 to low and high limits for the relative intensity of that data,

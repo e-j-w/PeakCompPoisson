@@ -71,9 +71,11 @@ void readConfigFile(const char *fileName) {
           strcpy(expDataName, str2);
         
         if(strcmp(str1, "ADD_BACKGROUND") == 0){
-          if(strcmp(str2, "lin") == 0)
+          if(strcmp(str2, "quad") == 0)
+            addBackground = 1; //quadratic
+          else if(strcmp(str2, "lin") == 0)
             addBackground = 2; //linear
-          else if (strcmp(str2, "const") == 0)
+          else if(strcmp(str2, "const") == 0)
             addBackground = 3; //constant
           else
             addBackground = 0;

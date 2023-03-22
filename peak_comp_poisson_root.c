@@ -1,14 +1,14 @@
 #include "peak_comp_poisson_root.h"
 #include "read_config.c"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]){
 
   int i = 0;
   int j = 0;
   int k = 0;
   FILE *expData, *simData, *results, *scalingFactors;
 
-  if (argc != 2) {
+  if(argc != 2){
     printf("\npeak_comp_poisson parameter_file\n");
     printf("Compares the .mca spectra designated in the parameter file "
            "specified and generates cool statistics.\n\n");
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
   for(i = 0; i < NSPECT; i++)
     for(j = 0; j < S32K; j++){
       expHist[i][j] = 0.;
-      for (k = 0; k < NSIMDATA; k++){
+      for(k = 0; k < NSIMDATA; k++){
         simHist[k][i][j] = 0.;
         scaledSimHist[k][i][j] = 0.;
       }
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
   readConfigFile(argv[1]); // grab data from the config file
 
   // check that the number of spectra being compared is fine
-  if(numSpectra >= NSPECT) {
+  if(numSpectra >= NSPECT){
     printf("ERROR: A spectrum number specified in the parameter file is larger "
            "than the maximum value of %i.  Reduce it or increase NSPECT in "
            "peak_comp.h and recompile.\n",
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 
   // read in the .mca files
   // check file extension of exp data and copy into float histogram
-  if ((expData = fopen(expDataName, "r")) == NULL) {
+  if((expData = fopen(expDataName, "r")) == NULL){
     printf("ERROR: Cannot open the experiment data file %s!\n", expDataName);
     exit(-1);
   }
@@ -104,8 +104,8 @@ int main(int argc, char *argv[]) {
       }*/
 
   /*// read into ROOT
-  for (i = 0; i < numSpectra; i++)
-    for (j = 0; j < S32K; j++)
+  for(i = 0; i < numSpectra; i++)
+    for(j = 0; j < S32K; j++)
       sim[i]->Fill(j, simHist[0][i][j]);*/
 
   if(verbosity>0)
@@ -119,14 +119,16 @@ int main(int argc, char *argv[]) {
     for(j = 0; j < S32K; j++)
       for(k=0;k<numSimData;k++){
         scaledSimHist[k][spectrum[i]][j]=0.;
-        scaledSimHist[k][spectrum[i]][j] += aFinal[k+2][i] * simHist[k][spectrum[i]][j];
+        scaledSimHist[k][spectrum[i]][j] += aFinal[k+3][i] * simHist[k][spectrum[i]][j];
       }
 
   // add background to simulated data
-  for (i = 0; i < numSpectra; i++)
-    for (j = 0; j < S32K; j++){
-      if(addBackground == 2){
-        bgHist[spectrum[i]][j] = aFinal[0][i] + aFinal[1][i] * (double)j;
+  for(i = 0; i < numSpectra; i++)
+    for(j = 0; j < S32K; j++){
+      if(addBackground == 1){
+        bgHist[spectrum[i]][j] = aFinal[0][i] + aFinal[1][i]*(double)j + aFinal[2][i]*(double)j*(double)j;
+      }else if(addBackground == 2){
+        bgHist[spectrum[i]][j] = aFinal[0][i] + aFinal[1][i]*(double)j;
       }else if(addBackground == 3){
         bgHist[spectrum[i]][j] = aFinal[0][i];
       }else{
@@ -137,8 +139,8 @@ int main(int argc, char *argv[]) {
       
 
   // fit result histogram
-  for (i = 0; i < numSpectra; i++)
-    for (j = 0; j < S32K; j++)
+  for(i = 0; i < numSpectra; i++)
+    for(j = 0; j < S32K; j++)
       {
         resultsHist[spectrum[i]][j] = bgHist[spectrum[i]][j];
         for(k=0;k<numSimData;k++)
@@ -189,7 +191,7 @@ int main(int argc, char *argv[]) {
   fclose(scalingFactors);
 
   /*printf("Scaling factors:\n");
-  for (i = 0; i < numSpectra; i++) {
+  for(i = 0; i < numSpectra; i++){
     printf("%d %.9f\n", i + 1, aFinal[0][i]);
   }*/
 
@@ -204,7 +206,7 @@ int main(int argc, char *argv[]) {
   return 0; // great success
 }
 
-double lrchisq(const double *par) {
+double lrchisq(const double *par){
   // chisq from likelihood ratio test
   // for more information see Baker and Cousins pg. 439 and Appendix
   double yi = 0.;      // model
@@ -221,15 +223,17 @@ double lrchisq(const double *par) {
     for(j=0; j<numSimData; j++){
       
       if((j>=1)&&(useRelIntensities)&&(relIntensityAvailable[j])){
-        yi += par[2]*par[j+2] * simCurrent[j][i]; //amplitude relative to the 1st ampliutude
+        yi += par[3]*par[j+3] * simCurrent[j][i]; //amplitude relative to the 1st ampliutude
       }else{
-        yi += par[j+2] * simCurrent[j][i];
+        yi += par[j+3] * simCurrent[j][i];
       }
       
     }
     // add background if neccesary
-    if(addBackground == 2){
-      yi += par[0] + par[1] * (double)i;
+    if(addBackground == 1){
+      yi += par[0] + par[1]*(double)i + par[2]*(double)i*(double)i;
+    }else if(addBackground == 2){
+      yi += par[0] + par[1]*(double)i;
     }else if(addBackground == 3){
       yi += par[0];
     }
@@ -252,7 +256,7 @@ double lrchisq(const double *par) {
   return lrchisq;
 }
 
-void find_chisqMin() {
+void find_chisqMin(){
   int i = 0;
   int j = 0;
   int k = 0;
@@ -306,30 +310,31 @@ void find_chisqMin() {
 
     // create function wrapper for minmizer
     // a IMultiGenFunction type
-    ROOT::Math::Functor lr(&lrchisq, 2+numSimData); // likelihood ratio chisq
+    ROOT::Math::Functor lr(&lrchisq, 3+numSimData); // likelihood ratio chisq
 
     // step size and starting variables
     // may need to change for best performance
     // under different running conditions
     double ratio = intExp/intSim;
-    double variable[2+NSIMDATA];
-    double step[2+NSIMDATA];
+    double variable[3+NSIMDATA];
+    double step[3+NSIMDATA];
 
-    for (j=0;j<2+numSimData;j++){
+    for(j=0;j<3+numSimData;j++){
       variable[j] = ratio/2.;
       step[j] = ratio/100.;
       //printf("Variable %i: val %f, step %f\n",j,variable[j],step[j]);
     }
     variable[1]/=100000.; //slope for linear background is usually very small
+    variable[2]/=100000.;
 
     min->SetFunction(lr);
 
     // Set pars for minimization
-    for (j=0;j<2+numSimData;j++){
+    for(j=0;j<3+numSimData;j++){
       sprintf(str, "a%i", j);
-      if((j>=3)&&(useRelIntensities)&&(ril[j-2]!=rih[j-2]))
-        min->SetLimitedVariable(j, str, variable[j], step[j],ril[j-2],rih[j-2]); //set relative intensity
-      else if((j>=2)&&(forcePosAmp==1))
+      if((j>=4)&&(useRelIntensities)&&(ril[j-3]!=rih[j-3]))
+        min->SetLimitedVariable(j, str, variable[j], step[j],ril[j-3],rih[j-3]); //set relative intensity
+      else if((j>=3)&&(forcePosAmp==1))
         min->SetLimitedVariable(j, str, variable[j], step[j],0.0,5.0*ratio); //j>=2 for amplitudes
       else if((j==1)&&(forceNegSlopeBG==1))
         min->SetLimitedVariable(j, str, -1.0*variable[j], step[j]/100., -1000.0, 0.0); //slope not allowed to be positive
@@ -350,9 +355,9 @@ void find_chisqMin() {
 
     // assuming 3 parameters
     // save pars
-    for(j = 0; j < 2+numSimData; j++){
-      if((j>=3)&&(useRelIntensities)&&(relIntensityAvailable[j-2])){
-        aFinal[j][i] = xs[j]*xs[2]; //intensity relative to first intensity
+    for(j = 0; j < 3+numSimData; j++){
+      if((j>=3)&&(useRelIntensities)&&(relIntensityAvailable[j-3])){
+        aFinal[j][i] = xs[j]*xs[3]; //intensity relative to first intensity
       }else{
         aFinal[j][i] = xs[j];
       }
@@ -361,7 +366,7 @@ void find_chisqMin() {
 
     //print amplitudes
     if(verbosity>0){
-      for(j = 2; j < 2+numSimData; j++){
+      for(j = 3; j < 3+numSimData; j++){
         printf("Spectrum %i, amplitude %i: %f\n",i+1,j-1,aFinal[j][i]);
       }
     }
@@ -369,7 +374,7 @@ void find_chisqMin() {
   }
 }
 
-void plotSpectra() {
+void plotSpectra(){
   
   int i, j, k;
   TH1D *results[NSPECT];
@@ -379,7 +384,7 @@ void plotSpectra() {
 
   // initialize and fill results histo
   char resultsName[132],resultsBGName[132],resultsSimDataName[132];
-  for (i = 0; i < NSPECT; i++) {
+  for(i = 0; i < NSPECT; i++){
     sprintf(resultsName, "results_%2d", i);
     results[i] = new TH1D(resultsName, ";;", S32K, 0, S32K - 1);
     if(plotMode>=1){
@@ -399,7 +404,7 @@ void plotSpectra() {
       if(plotMode>=1){
         resultsBGData[spectrum[i]]->Fill(j, bgHist[spectrum[i]][j]);
         for(k=0;k<numSimData;k++)
-          resultsSimData[k][spectrum[i]]->Fill(j, scaledSimHist[k][spectrum[i]][j]);
+          resultsSimData[k][spectrum[i]]->Fill(j, scaledSimHist[k][spectrum[i]][j] + bgHist[spectrum[i]][j]);
       }
     }
   }
@@ -413,7 +418,7 @@ void plotSpectra() {
 
   // formatting the plot area
   // be careful with indicies
-  for (i = 1; i <= numSpectra; i++) {
+  for(i = 1; i <= numSpectra; i++){
     c->GetPad(i)->SetRightMargin(0.01);
     c->GetPad(i)->SetTopMargin(0.025);
     Int_t ind = i - 1;
@@ -470,7 +475,7 @@ void plotSpectra() {
   if(plotMode>=1){
     for(k=0;k<numSimData;k++){
       sprintf(resultsName, "Branch %i", k+1);
-      leg->AddEntry(resultsSimData[k][0], resultsName, "l");
+      leg->AddEntry(resultsSimData[k][spectrum[k+1]], resultsName, "l");
     }
     
   }
@@ -493,7 +498,7 @@ int readMCA(FILE *inp, char *filename, float inpHist[NSPECT][S32K]){
   
   int mcaHist[NSPECT][S32K];
   for(int i = 0; i <= endSpectrum; i++){
-    if(fread(mcaHist[i], S32K * sizeof(int), 1, inp) != 1) {
+    if(fread(mcaHist[i], S32K * sizeof(int), 1, inp) != 1){
       printf("ERROR: Error reading file %s!\n", filename);
       exit(-1);
     }
