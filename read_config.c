@@ -1,9 +1,11 @@
 FILE *config;
 int spectrum[NSPECT], startCh[NSPECT], endCh[NSPECT];
+int fitStartCh[NSPECT], fitEndCh[NSPECT];
 int numSpectra, endSpectrum, maxNumCh, numSimData;
 double ril[NSIMDATA], rih[NSIMDATA];
 int addBackground; // 0=no, 1=constant background
 int plotOutput;    // 0=no, 1=yes, 2=detailed
+int rebinFactor;
 int forcePosAmp;   // 0=no, 1=yes
 int forceNegSlopeBG; //0=no, 1=yes
 int useRelIntensities; //0=no, 1=yes
@@ -20,6 +22,7 @@ void readConfigFile(const char *fileName) {
   maxNumCh = 0;
   numSimData = 0;
   saveResults = 0;
+  rebinFactor = 1;
   if((config = fopen(fileName, "r")) == NULL){
     printf("ERROR: Cannot open the config file %s!\n", fileName);
     exit(-1);
@@ -57,8 +60,9 @@ void readConfigFile(const char *fileName) {
       }else if (sscanf(str, "%s %s", str1, str2) == 2){
         if (strcmp(str1, "SIMULATED_DATA") == 0){
           if(numSimData<NSIMDATA){
-            if((verbosity>0)&&(numSimData>0))
+            if((verbosity>0)&&(numSimData>0)){
               printf("Relative intensities not provided for simulated data %i.\n",numSimData+1);
+            }
             strcpy(simDataName[numSimData], str2);
             relIntensityAvailable[numSimData]=0;
             numSimData++;
@@ -67,24 +71,33 @@ void readConfigFile(const char *fileName) {
       }
 
       if(sscanf(str, "%s %s", str1, str2) == 2){ // single parameter data
-        if(strcmp(str1, "EXPERIMENT_DATA") == 0)
+        if(strcmp(str1, "EXPERIMENT_DATA") == 0){
           strcpy(expDataName, str2);
-        
+        }
+        if(strcmp(str1, "REBIN_FACTOR") == 0){
+          rebinFactor = atoi(str2);
+          if((rebinFactor <= 0)||(rebinFactor > 100)){
+            printf("ERROR: REBIN_FACTOR must be an integer between 1 and 100.\n");
+            exit(-1);
+          }
+        }
         if(strcmp(str1, "ADD_BACKGROUND") == 0){
-          if(strcmp(str2, "quad") == 0)
+          if(strcmp(str2, "quad") == 0){
             addBackground = 1; //quadratic
-          else if(strcmp(str2, "lin") == 0)
+          }else if(strcmp(str2, "lin") == 0){
             addBackground = 2; //linear
-          else if(strcmp(str2, "const") == 0)
+          }else if(strcmp(str2, "const") == 0){
             addBackground = 3; //constant
-          else
+          }else{
             addBackground = 0;
+          }
         }
         if(strcmp(str1, "FORCE_POSITIVE_AMPLITUDE") == 0){
-          if(strcmp(str2, "yes") == 0)
+          if(strcmp(str2, "yes") == 0){
             forcePosAmp = 1;
-          else
+          }else{
             forcePosAmp = 0;
+          }
         }
         if(strcmp(str1, "FORCE_NEGATIVE_SLOPE_BACKGROUND") == 0){
           if(strcmp(str2, "yes") == 0)
@@ -147,9 +160,9 @@ void readConfigFile(const char *fileName) {
       printf("ERROR: no simulated data specified!\n");
       exit(-1);
     }
-    for (index = 0; index < numSpectra; index++)
-      printf("Will compare spectrum %i from channels %i to %i.\n",
-            spectrum[index], startCh[index], endCh[index]);
+    for (index = 0; index < numSpectra; index++){
+      printf("Will compare spectrum %i from channels %i to %i.\n", spectrum[index], startCh[index], endCh[index]);
+    }
     if(addBackground == 0)
       printf("Will not add background to simulated data.\n");
     if(addBackground == 2)
