@@ -33,6 +33,10 @@ void readConfigFile(const char *fileName) {
       if(index < NSPECT)
         // spectrum, channel range and step function parameter data
         if(sscanf(str, "%i %i %i", &spectrum[index], &startCh[index], &endCh[index]) == 3){
+          if(startCh[index] >= endCh[index]){
+            printf("ERROR: channel range for spectrum %i is zero or negative ([%i %i]).\n",spectrum[index],startCh[index],endCh[index]);
+            exit(-1);
+          }
           if(spectrum[index] > endSpectrum)
             endSpectrum = spectrum[index];
           if((endCh[index] - startCh[index] + 1) > maxNumCh)
@@ -49,6 +53,10 @@ void readConfigFile(const char *fileName) {
             printf("Intensities should only be specified for later datasets, relative to the first dataset.\n");
             exit(-1);
           }
+          if(ril[numSimData] >= rih[numSimData]){
+            printf("ERROR: relative intensity range for simulated data %s is zero or negative ([%lf %lf]).\n",str2,ril[numSimData],rih[numSimData]);
+            exit(-1);
+          }
           if(numSimData<NSIMDATA){
             if((verbosity>0)&&(numSimData>0))
               printf("Relative intensities provided for simulated data %i.\n",numSimData+1);
@@ -57,7 +65,7 @@ void readConfigFile(const char *fileName) {
             numSimData++;
           }
         }
-      }else if (sscanf(str, "%s %s", str1, str2) == 2){
+      }else if(sscanf(str, "%s %s", str1, str2) == 2){
         if (strcmp(str1, "SIMULATED_DATA") == 0){
           if(numSimData<NSIMDATA){
             if((verbosity>0)&&(numSimData>0)){
