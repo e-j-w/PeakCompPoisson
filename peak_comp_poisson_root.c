@@ -480,11 +480,13 @@ void plotSpectra(){
 
     //setup maximum y value
     data[spectrum[ind]]->GetXaxis()->SetRangeUser(low[i], high[i]);
+    results[spectrum[ind]]->GetXaxis()->SetRangeUser(low[i], high[i]);
     Double_t maxYVal = data[spectrum[ind]]->GetBinContent(data[spectrum[ind]]->GetMaximumBin());
     maxYVal = maxYVal + sqrt(maxYVal);
     //printf("maxVal: %f\n",maxYVal);
     if(results[spectrum[ind]]->GetMaximum() > maxYVal){
       maxYVal = results[spectrum[ind]]->GetMaximum();
+      //printf("maxVal - fit: %f\n",maxYVal);
     }
     data[spectrum[ind]]->GetYaxis()->SetRangeUser(-0.5,maxYVal+1);
 
