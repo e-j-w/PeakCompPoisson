@@ -429,13 +429,45 @@ void plotSpectra(){
 
   // divide canvas to accomodate all spectra
   // assumes number to plot <= 3*2=6
-  c->Divide(3, (int)(ceil(numSpectra/3.0)), 1E-6, 1E-6, 0);
+  Int_t numRows = (Int_t)(ceil(numSpectra/3.0));
+  if(numRows <= 0){
+    numRows = 1;
+  }
+  c->Divide(3, numRows, 1E-6, 1E-6, 0);
 
   // formatting the plot area
   // be careful with indicies
   for(i = 1; i <= numSpectra; i++){
-    c->GetPad(i)->SetRightMargin(0.01);
-    c->GetPad(i)->SetTopMargin(0.025);
+    if((i%3) == 1){
+      c->GetPad(i)->SetLeftMargin(0.15);
+    }else{
+      c->GetPad(i)->SetLeftMargin(0.05);
+    }
+    c->GetPad(i)->SetRightMargin(0.05);
+    c->GetPad(i)->SetTopMargin(0.02);
+    if((i-1)<((numRows-1)*3)){
+      c->GetPad(i)->SetBottomMargin(0.08);
+    }else{
+      //bottom row
+      c->GetPad(i)->SetBottomMargin(0.25);
+    }
+    TPad *pad = (TPad*)(c->GetPad(i));
+    if((i%3) == 1){
+      pad->SetBBoxX1(5);
+      pad->SetBBoxX2(560);
+    }else{
+      pad->SetBBoxX1(560 + ((i-2)%3)*520);
+      pad->SetBBoxX2(560 + ((i-1)%3)*520);
+    }
+    //pad->SetBBoxY2((940/numRows) + ((i-1)/3)*(940/numRows));
+    if((i-1)<((numRows-1)*3)){
+      pad->SetBBoxY2((950/numRows) + ((i-1)/3)*(950/numRows));
+    }else{
+      //bottom row
+      pad->SetBBoxY2((1050/numRows) + ((i-1)/3)*(950/numRows));
+    }
+    pad->SetBBoxY1(5 + ((i-1)/3)*(950/numRows));
+    //printf("y1: %i, y2: %i\n",5 + ((i-1)/3)*(995/(numRows)),(995/numRows) + ((i-1)/3)*(995/numRows));
     Int_t ind = i - 1;
     low[i] = startCh[ind];
     high[i] = endCh[ind];
@@ -445,27 +477,61 @@ void plotSpectra(){
   for(i = 1; i <= numSpectra; i++){
     c->cd(i);
     Int_t ind = i - 1;
+
+    //setup maximum y value
+    data[spectrum[ind]]->GetXaxis()->SetRangeUser(low[i], high[i]);
+    Double_t maxYVal = data[spectrum[ind]]->GetBinContent(data[spectrum[ind]]->GetMaximumBin());
+    maxYVal = maxYVal + sqrt(maxYVal);
+    //printf("maxVal: %f\n",maxYVal);
+    if(results[spectrum[ind]]->GetMaximum() > maxYVal){
+      maxYVal = results[spectrum[ind]]->GetMaximum();
+    }
+    data[spectrum[ind]]->GetYaxis()->SetRangeUser(-0.5,maxYVal+1);
+
     // data in black
     data[spectrum[ind]]->SetLineStyle(1);
-    data[spectrum[ind]]->SetLineWidth(2);
+    data[spectrum[ind]]->SetLineWidth(1);
     data[spectrum[ind]]->SetLineColor(12);
     data[spectrum[ind]]->SetMarkerColor(12);
     data[spectrum[ind]]->SetMarkerSize(0.8);
     data[spectrum[ind]]->SetMarkerStyle(21);
-    data[spectrum[ind]]->GetXaxis()->SetRangeUser(low[i], high[i]);
+    data[spectrum[ind]]->GetXaxis()->SetNdivisions(11);
+    data[spectrum[ind]]->GetYaxis()->SetNdivisions(9);
+    if((i-1)<((numRows-1)*3)){
+      data[spectrum[ind]]->GetXaxis()->SetLabelSize(0.085);
+      data[spectrum[ind]]->GetXaxis()->SetLabelOffset(0.01);
+      data[spectrum[ind]]->GetYaxis()->SetLabelSize(0.085);
+    }else{
+      data[spectrum[ind]]->GetXaxis()->SetLabelSize(0.080);
+      data[spectrum[ind]]->GetXaxis()->SetLabelOffset(0.01);
+      data[spectrum[ind]]->GetYaxis()->SetLabelSize(0.080);
+    }
+    if(i==1){
+      sprintf(dataName,"Counts / %i keV",rebinFactor);
+      data[spectrum[ind]]->GetYaxis()->SetTitle(dataName);
+      data[spectrum[ind]]->GetYaxis()->SetTitleSize(0.100);
+      data[spectrum[ind]]->GetYaxis()->SetTitleOffset(0.5);
+      data[spectrum[ind]]->GetYaxis()->CenterTitle();
+    }
+    if((i == ((numRows*3)-1))||((i==numSpectra)&&(i == ((numRows*3)-2)))){
+      data[spectrum[ind]]->GetXaxis()->SetTitle("Energy (keV)");
+      data[spectrum[ind]]->GetXaxis()->SetTitleSize(0.100);
+      data[spectrum[ind]]->GetXaxis()->SetTitleOffset(1.0);
+      data[spectrum[ind]]->GetXaxis()->CenterTitle();
+    }
     data[spectrum[ind]]->SetStats(0);
     data[spectrum[ind]]->Draw("PE1");
 
     // simulation in red
     results[spectrum[ind]]->SetLineStyle(1);
-    results[spectrum[ind]]->SetLineWidth(2);
+    results[spectrum[ind]]->SetLineWidth(1);
     results[spectrum[ind]]->SetLineColor(46);
     results[spectrum[ind]]->Draw("HIST SAME");
     if(plotMode>=1){
       //plot individual simulated data
       for(k=0;k<numSimData;k++){
         resultsSimData[k][spectrum[ind]]->SetLineStyle(1);
-        resultsSimData[k][spectrum[ind]]->SetLineWidth(2);
+        resultsSimData[k][spectrum[ind]]->SetLineWidth(1);
         resultsSimData[k][spectrum[ind]]->SetLineColor(799+k*20);
         resultsSimData[k][spectrum[ind]]->Draw("HIST SAME");
       }
@@ -483,9 +549,9 @@ void plotSpectra(){
   // x1,y1,x2,y2
   TLegend *leg;
   if(plotMode>=1){
-    leg = new TLegend(0.70, 0.85 - numSimData*0.05, 0.90, 0.95);
+    leg = new TLegend(0.70, 0.75 - numSimData*0.05, 0.90, 0.90);
   }else{
-    leg = new TLegend(0.70, 0.85, 0.90, 0.95);
+    leg = new TLegend(0.70, 0.75, 0.90, 0.90);
   }
   leg->AddEntry(data[0], "Experiment", "lp");
   leg->AddEntry(results[spectrum[0]], "Simulation", "l");
@@ -498,7 +564,7 @@ void plotSpectra(){
   leg->SetFillColor(0);
   leg->SetFillStyle(0);
   leg->SetBorderSize(0);
-  leg->SetTextSize(0.045);
+  leg->SetTextSize(0.075);
   leg->Draw();
 
   c->SetBorderMode(0);
