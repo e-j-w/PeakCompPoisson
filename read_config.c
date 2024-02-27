@@ -15,7 +15,7 @@ int saveResults;        // 0=no, 1=yes
 char expDataName[256], simDataName[NSIMDATA][256]; // file names
 char str[256], str1[256], str2[256];
 
-void readConfigFile(const char *fileName) {
+void readConfigFile(const char *fileName){
   int index = 0;
   numSpectra = 0;
   endSpectrum = 0;
@@ -27,8 +27,7 @@ void readConfigFile(const char *fileName) {
     printf("ERROR: Cannot open the config file %s!\n", fileName);
     exit(-1);
   }
-  while (!(feof(config))) // go until the end of file is reached
-  {
+  while(!(feof(config))){ // go until the end of file is reached
     if(fgets(str, 256, config) != NULL){
       if(index < NSPECT)
         // spectrum, channel range and step function parameter data

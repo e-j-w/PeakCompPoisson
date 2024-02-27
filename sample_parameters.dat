@@ -42,7 +42,15 @@ quad: Add a quadratic background to the simulated data.
 
 FORCE_NEGATIVE_SLOPE_BACKGROUND
 yes: Force the background term to decrease (or stay constant) with increasing energy.
-no: Leave background parameters free.
+no: Leave background parameters free (default).
+
+FORCE_POSITIVE_AMPLITUDE
+yes: Force all simulated data amplitude parameters to non-negative values.
+no: Leave amplitude parameters free (default).
+
+USE_RELATIVE_INTENSITIES
+yes: Constrain relative amplitude parameters of simulated datasets to specified values (see SAVE_RESULTS below).
+no: Leave relative amplitudes free (default).
 
 PLOT_OUTPUT
 no: Show chisq stats only.
@@ -66,7 +74,7 @@ Two numbers can be specified after the filename, corresponding
 to low and high limits for the relative intensity of that data,
 relative to any other datasets specified.  Note: Intensity limits are 
 only valid for the second and later files, the first file will be assumed
-to have relative intensity 1.
+to have relative intensity 1.  Relative intensities will only be considered if USE_RELATIVE_INTENSITIES is set to 'yes'.
 
 SPECTRUM  START_CHANNEL END_CHANNEL
 Contains a list of the spectra to analyze in the experiment and simulated data, 
