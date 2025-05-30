@@ -144,9 +144,33 @@ int main(int argc, char *argv[]){
     }
   }
 
+  
+  double chisqNeyman = 0.0;
+  int dof = 0;
+  for(i = 0; i < numSpectra; i++){
+    for(j = fitStartCh[i]; j <= fitEndCh[i]; j++){
+      if(expHist[spectrum[i]][j] > 0){
+        chisqNeyman += pow((double)expHist[spectrum[i]][j] - resultsHist[spectrum[i]][j],2)/((double)expHist[spectrum[i]][j]);
+        dof++;
+      }
+    }
+  }
+  dof = dof-numSimData;
+  if(addBackground == 1){
+    dof = dof-3;
+  }else if(addBackground == 2){
+    dof = dof-2;
+  }else if(addBackground == 3){
+    dof = dof-1;
+  }
+
   // print output
   if(verbosity>0){
-    printf("Fit chisq: %.15f\n", chisq);
+    printf("Fit chisq (likelihood): %.15f\n", chisq);
+    printf("Fit chisq (Neyman): %.15f\n", chisqNeyman);
+    printf("DOF: %i\n",dof);
+    printf("Reduced chisq (likelihood): %.15f\n", chisq/(dof*1.0));
+    printf("Reduced chisq (Neyman): %.15f\n", chisqNeyman/(dof*1.0));
   }else{
     printf("%.15f\n", chisq);
   }
@@ -310,6 +334,9 @@ double find_chisqMin(){
 
     for(j=0;j<3+numSimData;j++){
       variable[j] = ratio/2.;
+      if(j>=4){
+        variable[j] = ratio/20.;
+      }
       step[j] = ratio/100.;
       //printf("Variable %i: val %f, step %f\n",j,variable[j],step[j]);
     }
