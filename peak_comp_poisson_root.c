@@ -157,11 +157,11 @@ int main(int argc, char *argv[]){
   }
   dof = dof-numSimData;
   if(addBackground == 1){
-    dof = dof-3;
+    dof = dof-(3*numSpectra);
   }else if(addBackground == 2){
-    dof = dof-2;
+    dof = dof-(2*numSpectra);
   }else if(addBackground == 3){
-    dof = dof-1;
+    dof = dof-(1*numSpectra);
   }
 
   // print output
