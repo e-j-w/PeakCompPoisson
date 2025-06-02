@@ -146,31 +146,48 @@ int main(int argc, char *argv[]){
 
   
   double chisqNeyman = 0.0;
+  double chisqPearson = 0.0;
   int dof = 0;
+  int dofPearson = 0;
+  int dofNeyman = 0;
   for(i = 0; i < numSpectra; i++){
     for(j = fitStartCh[i]; j <= fitEndCh[i]; j++){
+      dof++;
       if(expHist[spectrum[i]][j] > 0){
         chisqNeyman += pow((double)expHist[spectrum[i]][j] - resultsHist[spectrum[i]][j],2)/((double)expHist[spectrum[i]][j]);
-        dof++;
+        dofNeyman++;
+      }
+      if(resultsHist[spectrum[i]][j] > 0){
+        chisqPearson += pow((double)expHist[spectrum[i]][j] - resultsHist[spectrum[i]][j],2)/((double)resultsHist[spectrum[i]][j]);
+        dofPearson++;
       }
     }
   }
   dof = dof-numSimData;
+  dofPearson = dofPearson-numSimData;
+  dofNeyman = dofNeyman-numSimData;
   if(addBackground == 1){
     dof = dof-(3*numSpectra);
+    dofPearson = dofPearson-(3*numSpectra);
+    dofNeyman = dofNeyman-(3*numSpectra);
   }else if(addBackground == 2){
     dof = dof-(2*numSpectra);
+    dofPearson = dofPearson-(2*numSpectra);
+    dofNeyman = dofNeyman-(2*numSpectra);
   }else if(addBackground == 3){
     dof = dof-(1*numSpectra);
+    dofPearson = dofPearson-(1*numSpectra);
+    dofNeyman = dofNeyman-(1*numSpectra);
   }
 
   // print output
   if(verbosity>0){
     printf("Fit chisq (likelihood): %.15f\n", chisq);
     printf("Fit chisq (Neyman): %.15f\n", chisqNeyman);
-    printf("DOF: %i\n",dof);
+    printf("DOF: %i, %i (Pearson), %i (Neyman)\n",dof,dofPearson,dofNeyman);
     printf("Reduced chisq (likelihood): %.15f\n", chisq/(dof*1.0));
-    printf("Reduced chisq (Neyman): %.15f\n", chisqNeyman/(dof*1.0));
+    printf("Reduced chisq (Pearson): %.15f\n", chisqPearson/(dofPearson*1.0));
+    printf("Reduced chisq (Neyman): %.15f\n", chisqNeyman/(dofNeyman*1.0));
   }else{
     printf("%.15f\n", chisq);
   }
